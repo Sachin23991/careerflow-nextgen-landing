@@ -1,4 +1,6 @@
 import { CheckCircle, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import AnimatedSection from "@/components/AnimatedSection";
 
 const steps = [
   {
@@ -38,7 +40,7 @@ const HowItWorks = () => {
 
       <div className="container mx-auto relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 space-y-4 animate-fade-in">
+        <AnimatedSection className="text-center mb-16 space-y-4">
           <span className="px-4 py-2 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-sm font-semibold inline-block">
             🎯 Simple Process
           </span>
@@ -50,43 +52,63 @@ const HowItWorks = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Four simple steps to transform your career journey
           </p>
-        </div>
+        </AnimatedSection>
 
         {/* Steps */}
         <div className="max-w-4xl mx-auto space-y-8">
           {steps.map((step, index) => (
-            <div
-              key={index}
-              className="group relative animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <div className="flex items-start gap-6 p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border hover:shadow-glow-primary transition-all duration-300">
-                {/* Step Number */}
-                <div className={`flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-${step.color} to-accent flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                  {step.number}
-                </div>
+            <AnimatedSection key={index} delay={index * 0.15}>
+              <motion.div
+                whileHover={{ x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="group relative">
+                  <motion.div 
+                    className="flex items-start gap-6 p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border hover:shadow-glow-primary transition-all duration-300"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    {/* Step Number */}
+                    <motion.div 
+                      className={`flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-${step.color} to-accent flex items-center justify-center text-2xl font-bold text-white shadow-lg`}
+                      whileHover={{ rotate: 360, scale: 1.1 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      {step.number}
+                    </motion.div>
 
-                {/* Content */}
-                <div className="flex-1 space-y-2">
-                  <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+                    {/* Content */}
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">
+                        {step.title}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {step.description}
+                      </p>
+                    </div>
 
-                {/* Check Icon */}
-                <CheckCircle className={`flex-shrink-0 w-6 h-6 text-${step.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
-              </div>
+                    {/* Check Icon */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      transition={{ delay: 0.5, duration: 0.3 }}
+                    >
+                      <CheckCircle className={`flex-shrink-0 w-6 h-6 text-${step.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
+                    </motion.div>
+                  </motion.div>
 
-              {/* Connector Arrow */}
-              {index < steps.length - 1 && (
-                <div className="flex justify-center my-4">
-                  <ArrowRight className="w-8 h-8 text-muted-foreground/30 animate-bounce" />
+                  {/* Connector Arrow */}
+                  {index < steps.length - 1 && (
+                    <motion.div 
+                      className="flex justify-center my-4"
+                      animate={{ y: [0, 10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <ArrowRight className="w-8 h-8 text-muted-foreground/30" />
+                    </motion.div>
+                  )}
                 </div>
-              )}
-            </div>
+              </motion.div>
+            </AnimatedSection>
           ))}
         </div>
       </div>

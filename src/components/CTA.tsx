@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import AnimatedSection from "@/components/AnimatedSection";
 
 const CTA = () => {
   return (
@@ -13,12 +15,23 @@ const CTA = () => {
       </div>
 
       <div className="container mx-auto relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+        <AnimatedSection className="max-w-4xl mx-auto text-center space-y-8">
           {/* Icon */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-glow-accent animate-glow">
+            <motion.div 
+              className="w-20 h-20 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-glow-accent"
+              animate={{ 
+                boxShadow: [
+                  "0 10px 60px -10px hsl(280 75% 60% / 0.4)",
+                  "0 10px 80px -10px hsl(280 75% 60% / 0.7)",
+                  "0 10px 60px -10px hsl(280 75% 60% / 0.4)"
+                ],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
               <Sparkles className="w-10 h-10 text-white" />
-            </div>
+            </motion.div>
           </div>
 
           {/* Heading */}
@@ -37,13 +50,17 @@ const CTA = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button variant="hero" size="lg" className="group text-lg px-8 py-6">
-              Get Started Free
-              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-              Schedule a Demo
-            </Button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="hero" size="lg" className="group text-lg px-8 py-6">
+                Get Started Free
+                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                Schedule a Demo
+              </Button>
+            </motion.div>
           </div>
 
           {/* Trust Indicators */}
@@ -61,7 +78,7 @@ const CTA = () => {
               <span>Cancel anytime</span>
             </div>
           </div>
-        </div>
+        </AnimatedSection>
       </div>
     </section>
   );
