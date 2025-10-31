@@ -32,7 +32,7 @@ const Hero = () => {
           >
             <div className="inline-block">
               <span className="px-4 py-2 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-sm font-semibold">
-                🚀 Your Career Journey Starts Here
+                 Your Career Journey Starts Here
               </span>
             </div>
             
@@ -66,8 +66,8 @@ const Hero = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8 pt-8 border-t border-border">
               {[
-                { value: "50K+", label: "Active Users", color: "text-primary" },
-                { value: "10K+", label: "Mentors", color: "text-secondary" },
+                { value: "10", label: "Active Users", color: "text-primary" },
+                { value: "5", label: "Mentors", color: "text-secondary" },
                 { value: "95%", label: "Success Rate", color: "text-accent" }
               ].map((stat, index) => (
                 <motion.div
