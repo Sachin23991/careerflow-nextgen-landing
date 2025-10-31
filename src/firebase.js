@@ -1,13 +1,7 @@
 // src/firebase.js
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// Replace top-level static imports with a runtime/lazy loader and graceful fallback.
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCQ0X7aXiiBxDLCXf_rp3CpNelypTpMAUo",
   authDomain: "carrerflow-a73c1.firebaseapp.com",
@@ -18,16 +12,76 @@ const firebaseConfig = {
   measurementId: "G-98NVRH3QQB"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Exported bindings (live bindings updated once modules load)
+export let app = null;
+export let analytics = null;
+export let auth = null;
+export let db = null;
+export let storage = null;
 
-// Only initialize analytics if running in the browser (not on server)
-let analytics;
-if (typeof window !== "undefined" && typeof window.document !== "undefined") {
-  analytics = getAnalytics(app);
-}
+// Lazy initialize Firebase only in the browser and only if packages are available.
+// This avoids Vite failing on missing static imports during dev if packages are not installed.
+(async function initFirebase() {
+  if (typeof window === "undefined" || typeof window.document === "undefined") {
+    // Not running in a browser environment (SSR). Skip initialization.
+    return;
+  }
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+  try {
+    // Use dynamic imports so bundlers don't treat these as top-level static imports.
+    const firebaseAppMod = await import("firebase/app");
+    const initializeApp = firebaseAppMod.initializeApp || firebaseAppMod.default?.initializeApp;
+    if (!initializeApp) throw new Error("firebase/app does not expose initializeApp");
+
+    // Initialize app
+    app = initializeApp(firebaseConfig);
+
+    // Try to load optional modules; each may fail if the package isn't installed.
+    try {
+      const analyticsMod = await import("firebase/analytics");
+      const getAnalytics = analyticsMod.getAnalytics || analyticsMod.default?.getAnalytics;
+      if (getAnalytics && app) analytics = getAnalytics(app);
+    } catch (_) {
+      // ignore: analytics not installed or not available in environment
+    }
+
+    try {
+      const authMod = await import("firebase/auth");
+      const getAuth = authMod.getAuth || authMod.default?.getAuth;
+      if (getAuth && app) auth = getAuth(app);
+    } catch (_) {
+      // ignore: auth not installed
+    }
+
+    try {
+      const dbMod = await import("firebase/firestore");
+      const getFirestore = dbMod.getFirestore || dbMod.default?.getFirestore;
+      if (getFirestore && app) db = getFirestore(app);
+    } catch (_) {
+      // ignore: firestore not installed
+    }
+
+    try {
+      const storageMod = await import("firebase/storage");
+      const getStorage = storageMod.getStorage || storageMod.default?.getStorage;
+      if (getStorage && app) storage = getStorage(app);
+    } catch (_) {
+      // ignore: storage not installed
+    }
+  } catch (err) {
+    // If dynamic import fails (packages missing), show a clear console hint instead of breaking the dev server.
+    // To fully resolve the Vite errors, install the packages:
+    //   npm install firebase axios
+    // or
+    //   yarn add firebase axios
+    // After installing, restart the dev server.
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[firebase] Could not initialize Firebase — missing packages? Run `npm install firebase axios` and restart the dev server.",
+      err && err.message ? err.message : err
+    );
+  }
+})();
+
+// Default export remains for callers that expect it; it may be null until initialized.
 export default app;

@@ -1,6 +1,11 @@
 /* Navbar-specific styles that rely on the CSS tokens defined in index.css */
 
 .navbar {
+  /* keep a small vertical padding but ensure min-height prevents collapsing */
+  padding: 1rem 0;
+  min-height: var(--navbar-height);
+  position: sticky;
+  top: 0;
   background: hsl(var(--background) / 0.86);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -11,7 +16,7 @@
 
 /* stronger shadow when scrolled */
 .navbar--scrolled {
-  box-shadow: 0 6px 30px -10px hsl(var(--primary) / 0.12);
+  box-shadow: 0 6px 20px -12px hsl(var(--primary) / 0.12);
 }
 
 /* container helper to keep spacing consistent with layout */
@@ -19,36 +24,43 @@
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1rem;
+  padding-left: 1rem;   /* slightly larger to give breathing room */
   padding-right: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  position: relative; /* needed for any absolute children */
+  min-height: var(--navbar-height);
 }
+
+/* left / center / right helpers */
+.navbar__left { justify-self: start; display: flex; align-items: center; }
+.navbar__center { justify-self: center; display: flex; align-items: center; }
+.navbar__right { justify-self: end; display: flex; align-items: center; gap: 0.5rem; }
 
 /* logo group */
 .navbar__logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 /* square logo icon — uses the gradient token from index.css */
 .navbar__logo-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.5rem;
-  /* make logo background transparent so image's alpha shows through */
-  
-  /* remove the strong glow, replace with a very subtle shadow (or set to none) */
-  
   flex-shrink: 0;
 }
 
 /* brand word-mark uses gradient text */
 .navbar__brand {
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1rem;
   line-height: 1;
   background-image: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -56,21 +68,31 @@
   color: transparent;
 }
 
-/* Nav links area */
-.nav-links { display: flex; align-items: center; gap: 2rem; }
+/* Nav links area: prevent wrap and keep centered */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* slightly smaller gap for compactness on medium screens */
+@media (min-width: 1024px) {
+  .nav-links { gap: 1.5rem; }
+}
 
 /* each link uses a subtle underline animation */
 .nav-link {
   position: relative;
-  /* default text color should be black */
   color: #000 !important;
   text-decoration: none;
   padding: 0.125rem 0;
   transition: color 160ms ease, background-position 280ms ease;
-  /* ensure background clipping works when we switch to gradient */
   background-repeat: no-repeat;
   background-size: 200% 100%;
   background-position: 0% 50%;
+  font-size: 0.95rem; /* slightly smaller text to save space */
 }
 
 /* gradient on hover: light sky blue -> dark blue, clipped to text */
@@ -132,4 +154,12 @@
 /* small responsiveness tweaks (fallbacks if Tailwind classes differ) */
 @media (min-width: 768px) {
   .mobile-menu { display: none; }
+}
+
+/* ensure anchored links scroll to visible content (prevent content hiding behind sticky navbar) */
+:root {
+  --navbar-height: 48px; /* compact navbar target height */
+}
+html {
+  scroll-padding-top: var(--navbar-height);
 }

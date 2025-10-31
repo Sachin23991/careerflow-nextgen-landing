@@ -8,7 +8,7 @@ const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero pt-16">
+    <section className="relative flex items-start justify-center overflow-hidden bg-gradient-hero pt-6">
       {/* 3D Scene Background */}
       <Suspense fallback={null}>
         <Hero3DScene />
@@ -21,7 +21,7 @@ const Hero = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="container mx-auto px-4 py-20 relative z-10">
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <motion.div 

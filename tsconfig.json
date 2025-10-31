@@ -6,6 +6,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    // 💡 REQUIRED FIXES for Vite/Firebase V9
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true, 
+    "allowSyntheticDefaultImports": true,
+
+    // Your existing options
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,
