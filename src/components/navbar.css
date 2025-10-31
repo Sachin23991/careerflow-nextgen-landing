@@ -39,7 +39,7 @@
   justify-content: center;
   border-radius: 0.5rem;
   /* make logo background transparent so image's alpha shows through */
- 
+  
   /* remove the strong glow, replace with a very subtle shadow (or set to none) */
   
   flex-shrink: 0;
@@ -62,12 +62,28 @@
 /* each link uses a subtle underline animation */
 .nav-link {
   position: relative;
-  color: hsl(var(--foreground) / 0.85);
+  /* default text color should be black */
+  color: #000 !important;
   text-decoration: none;
   padding: 0.125rem 0;
-  transition: color 160ms ease;
+  transition: color 160ms ease, background-position 280ms ease;
+  /* ensure background clipping works when we switch to gradient */
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: 0% 50%;
 }
 
+/* gradient on hover: light sky blue -> dark blue, clipped to text */
+.nav-link:hover {
+  /* gradient colors: adjust as desired */
+  background-image: linear-gradient(90deg, #7dd3fc 0%, #0369a1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  background-position: 100% 50%;
+}
+
+/* keep the underline animation (remains primary color) */
 .nav-link::after {
   content: "";
   position: absolute;
@@ -79,10 +95,6 @@
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 160ms ease;
-}
-
-.nav-link:hover {
-  color: hsl(var(--foreground));
 }
 
 .nav-link:hover::after {
