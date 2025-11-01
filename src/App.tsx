@@ -5,13 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-
-// 1. IMPORT YOUR AUTH COMPONENT
-// **********************************
-// CORRECTED: Import the new combined component
-// **********************************
-import AuthContainer from "./pages/AuthContainer.tsx"; 
-// Removed import LoginPage and AuthPage as they are merged
+import AuthContainer from "./pages/AuthContainer.tsx";
+import DashboardApp from "./pages/Dashboard.tsx"; // added: connect dashboard page
 
 const queryClient = new QueryClient();
 
@@ -29,6 +24,9 @@ const App = () => (
           <Route path="/login" element={<AuthContainer initialView="login" />} />
           <Route path="/signup" element={<AuthContainer initialView="signup" />} /> 
           <Route path="/auth" element={<AuthContainer initialView="login" />} />
+          
+          {/* New dashboard route */}
+          <Route path="/dashboard" element={<DashboardApp onNavigate={() => {}} />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

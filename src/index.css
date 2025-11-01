@@ -6,6 +6,11 @@
 All colors MUST be HSL.
 */
 
+/* Ensure a default --border variable exists (adjust color as needed) */
+:root {
+  --border: rgba(0,0,0,0.08);
+}
+
 @layer base {
   :root {
     --background: 220 25% 98%;
@@ -116,5 +121,13 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Define custom utilities inside a Tailwind layer so @apply can use them */
+@layer utilities {
+  /* minimal utility expected by your project */
+  .border-border {
+    border-color: var(--border);
   }
 }
