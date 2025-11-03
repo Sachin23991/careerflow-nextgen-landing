@@ -1,0 +1,114 @@
+.welcomeWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(180deg, var(--background, #f8fafc) 0%, rgba(99,102,241,0.08) 100%);
+}
+
+.card {
+  max-width: 720px;
+  width: 100%;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.08);
+  background: white;
+}
+
+.welcomeContent {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+.logoBox {
+  height: 80px;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7c3aed, #60a5fa);
+  box-shadow: 0 6px 18px rgba(99,102,241,0.25);
+}
+
+.titleBlock { margin-top: 6px; }
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.description {
+  color: #6b7280;
+  max-width: 520px;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.startButtonWrap { padding-top: 12px; }
+
+.startButton {
+  gap: 8px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+}
+.startButton:hover {
+  background: #6d28d9;
+}
+
+.poweredBy {
+  margin-top: 12px;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* Chat view styles */
+.chatWrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--background, #ffffff) 0%, rgba(99,102,241,0.03) 100%);
+}
+
+.header {
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,0.6);
+}
+
+.headerLogo {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0d0a12, #0c0d0d);
+  box-shadow: 0 4px 12px rgba(2,6,23,0.05);
+}
+
+/* Messages container area */
+.messagesArea {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Footer / input area */
+.footer {
+  border-top: 1px solid rgba(15,23,42,0.04);
+  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,0.6);
+}
