@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Home, MessageSquare, FileText, Search, Award, BookOpen, GraduationCap, Users } from 'lucide-react';
 
 interface SidebarProps {
@@ -6,6 +7,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+  const [logoHover, setLogoHover] = useState(false);
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'chatbot', label: 'Career Assistant', icon: MessageSquare },
@@ -20,9 +22,24 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-900">Career Flow</h1>
-        <p className="text-sm text-gray-500 mt-1">Your Career Companion</p>
+      <div
+        className="p-6 border-b border-gray-200 flex items-center gap-3"
+        onMouseEnter={() => setLogoHover(true)}
+        onMouseLeave={() => setLogoHover(false)}
+      >
+        {/* logo from public folder - spins continuously while hovered or focused */}
+        <img
+          src="/logo.png"
+          alt="Career Flow Logo"
+          tabIndex={0}
+          onFocus={() => setLogoHover(true)}
+          onBlur={() => setLogoHover(false)}
+          className={`w-10 h-10 rounded-md object-contain transform ${logoHover ? 'animate-spin' : ''}`}
+        />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Career Flow</h1>
+          <p className="text-sm text-gray-500 mt-1">Your Career Companion</p>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-3">
