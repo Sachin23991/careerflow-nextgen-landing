@@ -4,7 +4,8 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(180deg, var(--background, #f8fafc) 0%, rgba(99,102,241,0.08) 100%);
+  /* lighter sky-blue tint */
+  background: linear-gradient(180deg, var(--background, #f8fafc) 0%, rgba(125,211,252,0.06) 100%);
 }
 
 .card {
@@ -31,8 +32,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  background: linear-gradient(135deg, #7c3aed, #60a5fa);
-  box-shadow: 0 6px 18px rgba(99,102,241,0.25);
+  /* lighter sky-blue gradient */
+  background: linear-gradient(135deg, #e0f7ff, #bae6fd);
+  /* softer shadow tint */
+  box-shadow: 0 6px 18px rgba(125,211,252,0.12);
 }
 
 .titleBlock { margin-top: 6px; }
@@ -61,12 +64,15 @@
 
 .startButton {
   gap: 8px;
-  background: #7c3aed;
-  color: white;
-  border: none;
+  /* enforce lighter sky-blue button (use !important to override component defaults) */
+  background: #7dd3fc !important;
+  color: #100e0e !important;
+  border: none !important;
+  box-shadow: 0 12px 30px rgba(125,211,252,0.12) !important;
 }
 .startButton:hover {
-  background: #6d28d9;
+  /* gentle darker sky-blue on hover */
+  background: #60c6f8 !important;
 }
 
 .poweredBy {
@@ -80,7 +86,8 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--background, #ffffff) 0%, rgba(99,102,241,0.03) 100%);
+  /* subtle light sky-blue tint */
+  background: linear-gradient(180deg, var(--background, #ffffff) 0%, rgba(125,211,252,0.03) 100%);
 }
 
 .header {
@@ -96,8 +103,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0d0a12, #0c0d0d);
-  box-shadow: 0 4px 12px rgba(2,6,23,0.05);
+  /* make header logo light sky-blue instead of dark */
+  background: linear-gradient(135deg, #2e93d6, #1d87c0);
+  box-shadow: 0 4px 12px rgba(125,211,252,0.08);
 }
 
 /* Messages container area */

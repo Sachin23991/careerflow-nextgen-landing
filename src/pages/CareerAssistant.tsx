@@ -1,13 +1,13 @@
 // CareerAssistant.tsx
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, SyntheticEvent } from "react";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card"; // Required for the Welcome screen
-import { MessageSquare, RotateCcw, Sparkles, ArrowRight } from "lucide-react"; // Required for the Welcome screen
+import { RotateCcw, Sparkles, ArrowRight } from "lucide-react"; // Required for the Welcome screen
 import styles from "./CareerAssistant.module.css"; // NEW: local CSS module
 
 interface Message {
@@ -34,11 +34,27 @@ const CareerAssistant = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // logo state + fallbacks for public/logo (tries .png, .svg, .webp, then /logo)
+  const [logoSrc, setLogoSrc] = useState<string>("/logo.png");
+  const logoFallbacks = ["/logo.png", "/logo.svg", "/logo.webp", "/logo"];
+  const logoTryIndex = useRef(0);
+  const handleLogoError = (e: SyntheticEvent<HTMLImageElement>) => {
+    logoTryIndex.current += 1;
+    if (logoTryIndex.current < logoFallbacks.length) {
+      setLogoSrc(logoFallbacks[logoTryIndex.current]);
+    } else {
+      // hide the broken image after all attempts
+      (e.target as HTMLImageElement).style.display = "none";
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    // scroll to bottom whenever messages change or typing state changes
+    scrollToBottom();
   }, [messages, isTyping]);
 
   const handleSendMessage = async (content: string) => {
@@ -79,12 +95,17 @@ const CareerAssistant = () => {
   // 1. WELCOME SCREEN (Derived from Index.tsx content)
   if (view === 'welcome') {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-accent/20 p-6">
-            <Card className="max-w-2xl w-full p-8 shadow-lg">
+        <div className={`${styles.welcomeWrapper} flex items-center justify-center p-6`}>
+            <Card className={`${styles.card} max-w-2xl w-full p-8 shadow-lg`}>
                 <div className="text-center space-y-6">
                     <div className="flex justify-center">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-                            <MessageSquare className="h-10 w-10 text-primary-foreground" />
+                        <div className={`${styles.logoBox} flex items-center justify-center rounded-2xl shadow-lg`}>
+                            <img
+                              src={logoSrc}
+                              alt="Career Flow logo"
+                              className="h-10 w-10 object-contain"
+                              onError={handleLogoError}
+                            />
                         </div>
                     </div>
                     
@@ -103,7 +124,13 @@ const CareerAssistant = () => {
                         <Button 
                             size="lg" 
                             onClick={() => setView('chat')} 
-                            className="gap-2 bg-primary hover:bg-primary/90"
+                            className={`${styles.startButton} gap-2`}
+                            // inline style to ensure the Button component's internal classes don't override our light sky-blue
+                            style={{
+                              backgroundColor: '#7dd3fc',
+                              color: '#ffffff',
+                              boxShadow: '0 12px 30px rgba(125,211,252,0.12)',
+                            }}
                         >
                             Start Chat with Career Assistant
                             <ArrowRight className="h-5 w-5" />
@@ -121,12 +148,12 @@ const CareerAssistant = () => {
 
   // 2. CHAT INTERFACE (Original CareerAssistant.tsx logic)
   return (
-    <div className="flex h-screen flex-col bg-gradient-to-b from-background to-accent/20">
+    <div className={`${styles.chatWrapper} flex h-screen flex-col`}>
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+      <header className={`${styles.header} border-b bg-card/50 backdrop-blur-sm`}>
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-md">
+            <div className={`${styles.headerLogo} flex items-center justify-center shadow-md`}>
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
@@ -147,7 +174,7 @@ const CareerAssistant = () => {
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`${styles.messagesArea} flex-1 overflow-y-auto`}>
         <div className="container mx-auto max-w-4xl px-6 py-8">
           {messages.length === 1 && (
             <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -170,7 +197,7 @@ const CareerAssistant = () => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t bg-card/50 backdrop-blur-sm">
+      <div className={`${styles.footer} border-t bg-card/50 backdrop-blur-sm`}>
         <div className="container mx-auto max-w-4xl px-6 py-6">
           <ChatInput onSend={handleSendMessage} disabled={isTyping} />
           <p className="mt-3 text-center text-xs text-muted-foreground">
