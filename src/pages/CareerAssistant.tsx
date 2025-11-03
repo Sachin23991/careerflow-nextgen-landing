@@ -29,6 +29,12 @@ const initialMessages: Message[] = [
 const CareerAssistant = () => {
   // NEW: State to switch between the Welcome/Intro View and the actual Chat View
   const [view, setView] = useState<'welcome' | 'chat'>('welcome'); 
+  const navigateToDashboard = () => {
+    // client-side navigation without next/router
+    if (typeof window !== "undefined") {
+      window.location.href = "/dashboard";
+    }
+  };
     
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
@@ -140,12 +146,17 @@ const CareerAssistant = () => {
                     <p className="text-sm text-muted-foreground pt-4">
                         Powered by advanced AI technology
                     </p>
-                </div>
-            </Card>
-        </div>
-      );
+                    <div className="pt-2">
+                      <Button variant="ghost" size="sm" onClick={navigateToDashboard} className="text-sm">
+                        ← Back to Dashboard
+                      </Button>
+                    </div>
+                 </div>
+             </Card>
+         </div>
+       );
   }
-
+ 
   // 2. CHAT INTERFACE (Original CareerAssistant.tsx logic)
   return (
     <div className={`${styles.chatWrapper} flex h-screen flex-col`}>
@@ -161,15 +172,20 @@ const CareerAssistant = () => {
               <p className="text-sm text-muted-foreground">AI-powered career guidance</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClearConversation}
-            className="gap-2"
-          >
-            <RotateCcw className="h-4 w-4" />
-            New Chat
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={navigateToDashboard} className="gap-2">
+              Dashboard
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearConversation}
+              className="gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              New Chat
+            </Button>
+          </div>
         </div>
       </header>
 
