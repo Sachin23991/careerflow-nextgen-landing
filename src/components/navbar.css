@@ -85,7 +85,8 @@
 /* each link uses a subtle underline animation */
 .nav-link {
   position: relative;
-  color: #000 !important;
+  /* use token-driven foreground color instead of forcing black */
+  color: hsl(var(--foreground));
   text-decoration: none;
   padding: 0.125rem 0;
   transition: color 160ms ease, background-position 280ms ease;
@@ -93,6 +94,13 @@
   background-size: 200% 100%;
   background-position: 0% 50%;
   font-size: 0.95rem; /* slightly smaller text to save space */
+}
+
+/* ensure links become white when the site is in "dark" mode (html.dark) */
+.dark .nav-link,
+.dark .nav-links a,
+.dark .mobile-menu a {
+  color: #ffffff !important;
 }
 
 /* gradient on hover: light sky blue -> dark blue, clipped to text */

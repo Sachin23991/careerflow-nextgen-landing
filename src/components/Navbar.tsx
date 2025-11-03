@@ -64,7 +64,8 @@ const Navbar = () => {
             <motion.a
               key={link.name}
               href={link.href}
-              className="text-foreground/80 hover:text-foreground transition-colors font-medium relative nav-link"
+              // Added dark:text-white so link becomes visible in dark mode
+              className="text-foreground/80 hover:text-foreground transition-colors font-medium relative nav-link dark:text-white"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -125,7 +126,8 @@ const Navbar = () => {
               <a
                 key={link.name}
                 href={link.href}
-                className="block text-foreground/80 hover:text-foreground transition-colors font-medium py-2"
+                // Added dark:text-white for mobile menu links
+                className="block text-foreground/80 hover:text-foreground transition-colors font-medium py-2 dark:text-white"
                 onClick={() => setIsOpen(false)}
               >
                 {link.name}

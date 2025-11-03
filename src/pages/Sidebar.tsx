@@ -21,9 +21,9 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-30">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col transition-all duration-300 z-30">
       <div
-        className="p-6 border-b border-gray-200 flex items-center gap-3"
+        className="p-6 border-b border-gray-200 dark:border-slate-700 flex items-center gap-3"
         onMouseEnter={() => setLogoHover(true)}
         onMouseLeave={() => setLogoHover(false)}
       >
@@ -37,8 +37,8 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           className={`w-10 h-10 rounded-md object-contain transform ${logoHover ? 'animate-spin' : ''}`}
         />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Career Flow</h1>
-          <p className="text-sm text-gray-500 mt-1">Your Career Companion</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Career Flow</h1>
+          <p className="text-sm text-gray-500 mt-1 dark:text-slate-400">Your Career Companion</p>
         </div>
       </div>
 
@@ -53,21 +53,24 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               onClick={() => onTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 group ${
                 isActive
-                  ? 'bg-gray-900 text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gray-900 text-white shadow-md dark:bg-slate-700 dark:text-white'
+                  : 'text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
-              <Icon size={20} className={`transition-transform duration-200 ${!isActive && 'group-hover:scale-110'}`} />
-              <span className="font-medium text-sm">{item.label}</span>
+              <Icon
+                size={20}
+                className={`transition-transform duration-200 ${!isActive ? 'group-hover:scale-110' : ''} ${isActive ? 'text-white' : 'text-gray-700 dark:text-white'}`}
+              />
+              <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-700 dark:text-white'}`}>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <p className="text-xs text-gray-600">Need help?</p>
-          <button className="text-sm text-gray-900 font-medium mt-1 hover:underline">
+      <div className="p-4 border-t border-gray-200 dark:border-slate-700">
+        <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+          <p className="text-xs text-gray-600 dark:text-white">Need help?</p>
+          <button className="text-sm text-gray-900 dark:text-white font-medium mt-1 hover:underline">
             Contact Support
           </button>
         </div>
