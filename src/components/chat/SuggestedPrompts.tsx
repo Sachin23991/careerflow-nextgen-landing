@@ -19,37 +19,36 @@ const prompts = [
     icon: Target,
     title: "Career Path Guidance",
     prompt: "Help me explore different career paths based on my interests and skills",
-    color: "text-blue-500",
-  },
-  {
-    icon: FileText,
-    title: "Resume Review",
-    prompt: "Can you help me improve my resume and make it stand out?",
-    color: "text-green-500",
+    color: "text-blue-600",
+    bg: "bg-blue-50 group-hover:bg-blue-100", // customize background + hover
   },
   {
     icon: Lightbulb,
     title: "Interview Prep",
     prompt: "Help me prepare for an upcoming job interview",
-    color: "text-amber-500",
+    color: "text-amber-600",
+    bg: "bg-amber-50 group-hover:bg-amber-100",
   },
   {
     icon: TrendingUp,
     title: "Skill Development",
     prompt: "What skills should I develop to advance in my career?",
-    color: "text-purple-500",
+    color: "text-purple-600",
+    bg: "bg-purple-50 group-hover:bg-purple-100",
   },
   {
     icon: Users,
     title: "Networking Tips",
     prompt: "Give me advice on building professional networks",
-    color: "text-pink-500",
+    color: "text-pink-600",
+    bg: "bg-pink-50 group-hover:bg-pink-100",
   },
   {
     icon: BookOpen,
     title: "Career Change",
     prompt: "I'm thinking about changing careers. Where should I start?",
-    color: "text-teal-500",
+    color: "text-teal-600",
+    bg: "bg-teal-50 group-hover:bg-teal-100",
   },
 ];
 
@@ -76,7 +75,7 @@ export const SuggestedPrompts = ({ onSelectPrompt }: SuggestedPromptsProps) => {
             >
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/50 transition-colors group-hover:bg-accent">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${item.bg}`}>
                     <Icon className={`h-5 w-5 ${item.color}`} />
                   </div>
                   <h3 className="font-medium text-sm text-foreground">
