@@ -7,7 +7,7 @@ import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card"; // Required for the Welcome screen
-import { RotateCcw, Sparkles, ArrowRight } from "lucide-react"; // Required for the Welcome screen
+import { RotateCcw, ArrowRight } from "lucide-react"; // Required for the Welcome screen
 import styles from "./CareerAssistant.module.css"; // NEW: local CSS module
 
 interface Message {
@@ -164,8 +164,17 @@ const CareerAssistant = () => {
       <header className={`${styles.header} border-b bg-card/50 backdrop-blur-sm`}>
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className={`${styles.headerLogo} flex items-center justify-center shadow-md`}>
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div
+              className={`${styles.headerLogo} flex items-center justify-center`}
+              style={{ background: "transparent" }}
+            >
+              {/* larger, responsive logo for header */}
+              <img
+                src={logoSrc}
+                alt="CareerFlow logo"
+                onError={handleLogoError}
+                className="h-10 w-10 md:h-12 md:w-12 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-foreground">Sancara AI</h1>
