@@ -1,4 +1,5 @@
 import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import './navbar.css'; // add shared logo CSS
 
 const Footer = () => {
   const footerLinks = {
@@ -15,9 +16,12 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow-primary">
-                <span className="text-xl font-bold text-primary-foreground">CF</span>
-              </div>
+              {/* Logo image (matches Navbar) */}
+              <img
+                src="/logo.png"
+                alt="CareerFlow logo"
+                className="w-10 h-10 rounded-lg object-contain shadow-glow-primary footer__logo"
+              />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 CareerFlow
               </span>
@@ -64,7 +68,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>&copy; 2025 CareerFlow. All rights reserved.</p>
-          <p>Made with ❤️ for aspiring professionals worldwide</p>
+          <p>Made By Sachin Rao </p>
         </div>
       </div>
     </footer>

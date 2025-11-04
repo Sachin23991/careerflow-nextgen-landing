@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 
@@ -18,20 +18,10 @@ const CTA = () => {
         <AnimatedSection className="max-w-4xl mx-auto text-center space-y-8">
           {/* Icon */}
           <div className="flex justify-center">
-            <motion.div 
-              className="w-20 h-20 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-glow-accent"
-              animate={{ 
-                boxShadow: [
-                  "0 10px 60px -10px hsl(280 75% 60% / 0.4)",
-                  "0 10px 80px -10px hsl(280 75% 60% / 0.7)",
-                  "0 10px 60px -10px hsl(280 75% 60% / 0.4)"
-                ],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <Sparkles className="w-10 h-10 text-white" />
-            </motion.div>
+            <div className="w-20 h-20 rounded-2xl bg-transparent flex items-center justify-center shadow-sm">
+              {/* static logo (no rotation/animation) */}
+              <img src="/logo.png" alt="CareerFlow logo" className="w-10 h-10 object-contain" />
+            </div>
           </div>
 
           {/* Heading */}

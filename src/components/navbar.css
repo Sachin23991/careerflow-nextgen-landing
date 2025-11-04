@@ -171,3 +171,35 @@
 html {
   scroll-padding-top: var(--navbar-height);
 }
+
+/* lightweight shared styles for the logo used in Navbar and Footer */
+
+.navbar__logo-icon,
+.footer__logo {
+  width: 2.5rem; /* matches w-10 */
+  height: 2.5rem;
+  border-radius: 0.5rem; /* rounded-lg */
+  object-fit: contain;
+  display: inline-block;
+  /* subtle drop shadow / glow to match design tokens */
+  box-shadow: 0 6px 18px rgba(59,130,246,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  animation: logo-spin 6s linear infinite;
+}
+
+.navbar__logo-icon:hover,
+.footer__logo:hover {
+  transform: scale(1.05);
+}
+
+/* gentle infinite rotation (subtle) */
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ensure footer layout spacing stays tidy (optional tweaks) */
+footer .footer__logo {
+  /* keep the animation a bit slower in footer if desired */
+  animation-duration: 8s;
+}
