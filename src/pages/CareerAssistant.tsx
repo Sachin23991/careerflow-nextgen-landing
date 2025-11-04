@@ -168,7 +168,7 @@ const CareerAssistant = () => {
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-foreground">Career Assistant</h1>
+              <h1 className="text-xl font-semibold text-foreground">Sancara AI</h1>
               <p className="text-sm text-muted-foreground">AI-powered career guidance</p>
             </div>
           </div>
