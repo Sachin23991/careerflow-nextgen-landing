@@ -8,6 +8,7 @@ import {
   Users, 
   BookOpen 
 } from "lucide-react";
+import './chat.css';
 
 interface SuggestedPromptsProps {
   onSelectPrompt: (prompt: string) => void;
@@ -70,7 +71,7 @@ export const SuggestedPrompts = ({ onSelectPrompt }: SuggestedPromptsProps) => {
           return (
             <Card
               key={index}
-              className="group cursor-pointer border-2 p-4 transition-all hover:border-primary hover:shadow-md active:scale-95"
+              className="group cursor-pointer border-2 p-4 transition-all card-interactive"
               onClick={() => onSelectPrompt(item.prompt)}
             >
               <div className="flex flex-col gap-3">

@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import './chat.css';
 
 interface Message {
   id: string;
@@ -34,10 +35,8 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
       {/* Avatar */}
       <Avatar
         className={cn(
-          "h-10 w-10 border-2 shadow-sm transition-all",
-          isUser
-            ? "border-primary/20 bg-primary"
-            : "border-accent bg-accent"
+          "h-10 w-10 shadow-sm transition-all chat-avatar-border",
+          isUser ? "border-primary/20 bg-primary" : "border-accent bg-accent"
         )}
       >
         <AvatarFallback className={isUser ? "bg-primary" : "bg-accent"}>

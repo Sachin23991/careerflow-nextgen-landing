@@ -1,3 +1,4 @@
+import "./chat.css";
 import { Bot } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -12,9 +13,9 @@ export const TypingIndicator = () => {
 
       <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm border bg-card px-5 py-3 shadow-sm">
         <div className="flex gap-1">
-          <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]"></span>
-          <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]"></span>
-          <span className="h-2 w-2 animate-bounce rounded-full bg-primary"></span>
+          <span className="typing-dot delay-1" style={{ backgroundColor: 'var(--tw-color-primary, #3b82f6)' }}></span>
+          <span className="typing-dot delay-2" style={{ backgroundColor: 'var(--tw-color-primary, #3b82f6)' }}></span>
+          <span className="typing-dot delay-3" style={{ backgroundColor: 'var(--tw-color-primary, #3b82f6)' }}></span>
         </div>
         <span className="text-sm text-muted-foreground">AI is thinking...</span>
       </div>

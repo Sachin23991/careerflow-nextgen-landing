@@ -1,0 +1,55 @@
+/* Basic fade & slide animations used across chat components */
+@keyframes cf-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cf-slide-up-small {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Utility animation classes (kept small and predictable) */
+.animate-in { animation-fill-mode: both; }
+.fade-in { animation-name: cf-fade-in; animation-duration: 280ms; animation-timing-function: ease-out; }
+.slide-in-from-bottom-2 { animation-name: cf-slide-up-small; animation-duration: 320ms; animation-timing-function: cubic-bezier(.22,.9,.36,1); }
+.duration-300 { animation-duration: 300ms !important; }
+
+/* Subtle glow shadows used for accent / primary tiles */
+.shadow-glow-accent { box-shadow: 0 10px 30px rgba(139,92,246,0.12); }
+.shadow-glow-primary { box-shadow: 0 10px 30px rgba(59,130,246,0.10); }
+
+/* Typing dots */
+@keyframes cf-typing-bounce {
+  0% { transform: translateY(0); opacity: 0.6; }
+  40% { transform: translateY(-6px); opacity: 1; }
+  80% { transform: translateY(0); opacity: 0.6; }
+  100% { transform: translateY(0); opacity: 0.6; }
+}
+.typing-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  animation-name: cf-typing-bounce;
+  animation-duration: 900ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  margin-right: 6px;
+}
+.typing-dot.delay-1 { animation-delay: -300ms; }
+.typing-dot.delay-2 { animation-delay: -150ms; }
+.typing-dot.delay-3 { animation-delay: 0ms; }
+
+/* Small chat utilities */
+.chat-card { border-radius: 12px; }
+.chat-avatar-border { border-width: 2px; }
+
+/* Make sure any image logos inside chat tiles fit */
+.chat-img-fit { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* Small hover/tap effect for interactive prompt cards */
+.card-interactive {
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  will-change: transform;
+}
+.card-interactive:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(2,6,23,0.08); }
