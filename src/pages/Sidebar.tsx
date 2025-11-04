@@ -10,7 +10,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [logoHover, setLogoHover] = useState(false);
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'chatbot', label: 'Career Assistant', icon: MessageSquare },
+    { id: 'chatbot', label: 'Sancara AI', icon: MessageSquare },
     { id: 'resume-builder', label: 'Resume Builder', icon: FileText },
     { id: 'resume-analyzer', label: 'Resume Analyzer', icon: Search },
     { id: 'job-finder', label: 'Job Finder', icon: Award },

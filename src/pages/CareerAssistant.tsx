@@ -138,7 +138,7 @@ const CareerAssistant = () => {
                               boxShadow: '0 12px 30px rgba(125,211,252,0.12)',
                             }}
                         >
-                            Start Chat with Career Assistant
+                            Start Chat with Sancara AI
                             <ArrowRight className="h-5 w-5" />
                         </Button>
                     </div>
