@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-24 px-4 relative overflow-hidden">
       {/* Animated Background */}
@@ -41,7 +43,12 @@ const CTA = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="hero" size="lg" className="group text-lg px-8 py-6">
+              <Button
+                variant="hero"
+                size="lg"
+                className="group text-lg px-8 py-6"
+                onClick={() => navigate('/login')}
+              >
                 Get Started Free
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
