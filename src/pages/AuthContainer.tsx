@@ -233,8 +233,8 @@ export default function AuthContainer({ initialView = 'login' }: { initialView?:
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                        // Removed background gradient and shadow since they don't apply well to a typical logo
-                        className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 rotating-logo"
+                        // Transparent static logo that pops on hover
+                        className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 static-logo"
                     >
                         <img 
                             src="/logo.png" // Loading from public folder
@@ -478,14 +478,8 @@ export default function AuthContainer({ initialView = 'login' }: { initialView?:
                     50% { transform: translate(-15px, -40px) rotate(180deg); }
                     75% { transform: translate(-30px, -20px) rotate(270deg); }
                 }
-                @keyframes rotate {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                @keyframes pulse-glow {
-                    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-                    50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
-                }
+                /* removed continuous rotation/pulse for logo */
+ 
                 .floating-shapes {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none;
                 }
@@ -498,10 +492,20 @@ export default function AuthContainer({ initialView = 'login' }: { initialView?:
                 .shape-3 { width: 250px; height: 250px; bottom: 10%; left: 15%; animation-delay: -10s; border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%; }
                 .shape-4 { width: 180px; height: 180px; top: 20%; right: 20%; animation-delay: -15s; border-radius: 60% 40% 40% 60% / 40% 60% 40% 60%; }
                 .shape-5 { width: 220px; height: 220px; top: 50%; left: 5%; animation-delay: -7s; border-radius: 50% 50% 30% 70% / 50% 30% 70% 50%; }
-
-                .rotating-logo { animation: pulse-glow 3s infinite; }
-                .rotating-logo:hover { animation: rotate 2s linear infinite, pulse-glow 3s infinite; }
-            `}</style>
+ 
+                /* static logo container: transparent background, subtle pop on hover */
+                .static-logo {
+                    background: transparent;
+                    transition: transform 180ms ease, box-shadow 180ms ease;
+                    transform-origin: center;
+                    will-change: transform;
+                }
+                .static-logo img { display: block; }
+                .static-logo:hover {
+                    transform: translateY(-6px) scale(1.06);
+                    box-shadow: 0 12px 30px rgba(2,6,23,0.12), 0 6px 14px rgba(59,130,246,0.08);
+                }
+             `}</style>
         </div>
     );
 }
