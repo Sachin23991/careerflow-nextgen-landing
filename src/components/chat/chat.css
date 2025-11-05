@@ -53,3 +53,122 @@
   will-change: transform;
 }
 .card-interactive:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(2,6,23,0.08); }
+
+/* Code block styling for chat messages */
+.code-block {
+  margin-top: 0.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: var(--code-bg, #0b1220);
+  color: var(--code-fg, #e6eef6);
+  position: relative;
+  border: 1px solid rgba(2,6,23,0.06);
+}
+
+/* Header (language + copy) */
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.8);
+}
+.code-lang {
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: lowercase;
+}
+
+/* Copy button */
+.code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  transition: background-color 120ms ease;
+}
+.code-copy-btn:hover {
+  background: rgba(255,255,255,0.02);
+}
+.code-copy-btn .code-copy-text {
+  font-size: 0.75rem;
+  opacity: 0.95;
+}
+
+/* Code area */
+.code-pre {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  max-height: 420px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: inherit;
+  background: transparent;
+}
+
+/* Inline code */
+.inline-code {
+  background: rgba(2,6,23,0.06);
+  padding: 0.12rem 0.3rem;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  font-size: 0.9em;
+}
+
+/* Speed select: make sure text is visible in both themes */
+/* Use multiple vendor properties and explicit fill-color for webkit to maximize compatibility */
+.speed-select {
+  color: var(--foreground-900, #0b1220);
+  background: transparent;
+  border: none;
+  padding: 0 0.25rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-shadow: none;
+  -webkit-text-fill-color: var(--foreground-900, #0b1220);
+}
+
+/* Remove default arrow on some browsers and use our own visual spacing */
+.speed-select::-ms-expand { display: none; }
+.speed-select:focus { outline: none; box-shadow: none; }
+
+/* Best-effort option styling: some browsers/platforms ignore option styling; this helps most Chromium-based browsers */
+.speed-select option {
+  background-color: var(--card, #0b1220) !important;
+  color: var(--foreground-900, #e6eef6) !important;
+  -webkit-text-fill-color: var(--foreground-900, #e6eef6) !important;
+}
+
+/* Light / Dark overrides and sensible defaults */
+:root {
+  --code-bg: #0b1220;
+  --code-fg: #e6eef6;
+  --foreground-900: #0b1220;
+  --muted-foreground: rgba(11,18,32,0.8);
+  --card: #ffffff;
+}
+html.dark {
+  --code-bg: #0b1220;
+  --code-fg: #e6eef6;
+  --foreground-900: #e6eef6;
+  --muted-foreground: rgba(255,255,255,0.85);
+  --card: #0b1220;
+}
+html:not(.dark) {
+  --code-bg: #f6f8fa;
+  --code-fg: #0b1220;
+  --foreground-900: #0b1220;
+  --muted-foreground: rgba(11,18,32,0.8);
+  --card: #ffffff;
+}

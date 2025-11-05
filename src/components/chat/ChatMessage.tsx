@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Bot, User } from "lucide-react";
+import { Bot, User, Clipboard } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import "./chat.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -15,11 +15,18 @@ interface Message {
 interface ChatMessageProps {
   message: Message;
   isLatest?: boolean;
+  animationEnabled?: boolean;
+  wordDelayMs?: number;
 }
 
 type LinkItem = { url: string; domain: string; precision?: string };
 
-export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => {
+export const ChatMessage = ({
+  message,
+  isLatest = false,
+  animationEnabled = true,
+  wordDelayMs = 30,
+}: ChatMessageProps) => {
   const isUser = message.role === "user";
 
   const formatTime = (date: Date) => {
@@ -29,7 +36,6 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
     });
   };
 
-  // Find URLs in text
   const findUrls = (text: string) => {
     if (!text) return [];
     const urlRegex = /(https?:\/\/[^\s)]+)/g;
@@ -37,7 +43,6 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
     return matches ? Array.from(new Set(matches)) : [];
   };
 
-  // Extract precision near a URL
   const extractPrecisionNearUrl = (url: string, text: string): string | undefined => {
     if (!text) return undefined;
     const idx = text.indexOf(url);
@@ -53,17 +58,20 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
     return undefined;
   };
 
-  // Remove URLs & metadata lines from displayed content
+  // Strip URLs & metadata but keep markdown asterisks so intentional bold/italic remain
   const stripUrlsAndMeta = (text: string) => {
     if (!text) return "";
     const urlRegex = /(https?:\/\/[^\s)]+)/g;
     let cleaned = text.replace(urlRegex, "");
     cleaned = cleaned.replace(/^.*\b(URL|Title)\b:.*$/gim, "");
-    cleaned = cleaned.replace(/(?:Relevance|Precision)[:\s]*[0-9]*\.?[0-9]+/gi, "");
+    // Remove any lines that mention Relevance or Precision (handles stars or non-numeric text)
+    cleaned = cleaned.replace(/^.*\b(Relevance|Precision)\b.*$/gim, "");
+    // Remove any star emoji remnants like "⭐" that may be left over
+    cleaned = cleaned.replace(/⭐+/g, "");
     cleaned = cleaned.replace(/\bURL:\b/gi, "");
     cleaned = cleaned.replace(/\bTitle:\b/gi, "");
-    cleaned = cleaned.replace(/\*/g, "");
-    cleaned = cleaned.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).join("\n");
+    // Preserve user-visible blank lines and asterisks for markdown. Trim overall edges.
+    cleaned = cleaned.split(/\r?\n/).map((l) => l).join("\n");
     return cleaned.trim();
   };
 
@@ -102,104 +110,140 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
     }
   };
 
-  // ✅ NEW: auto-structure long paragraph content
+  // Auto-structure but be conservative about what we treat as headers or list-keywords
   const autoStructureText = (text: string): string => {
     if (!text) return "";
 
     let structured = text.trim();
 
-    // Add line breaks after periods followed by capital letter
+    // Only treat lines that start with a capitalized phrase followed by ":" as section headers
+    structured = structured.replace(/^([A-Z][A-Za-z\s]{2,40}):/gm, "\n\n**$1:**");
+
+    // Add line breaks after periods followed by capital letter (keeps paragraphs readable)
     structured = structured.replace(/\. ([A-Z])/g, ".\n\n$1");
 
-    // Bold section headers ending with :
-    structured = structured.replace(/([A-Z][A-Za-z\s]{2,40}):/g, "\n\n**$1:**");
-
     // Add bullet points before numeric enumerations
-    structured = structured.replace(/\b\d+\.\s+/g, "\n- ");
+    structured = structured.replace(/\b(\d+)\.\s+/g, "\n- ");
 
-    // Add bullets before keywords like Step, Point, Process, etc.
-    structured = structured.replace(/\b(Step|Point|Process|Phase)\s*\d*[:\-]?\s*/gi, "\n- **$&** ");
+    // Only match Step/Point/Process/Phase as whole words (avoid matching within words like 'processes')
+    // Capture optional number after the keyword and keep it in the bolded label.
+    structured = structured.replace(/\b(Step|Point|Process|Phase)\b\s*(\d*)[:\-]?\s*/gi, (_, p1, p2) =>
+      `\n- **${p1}${p2 ? " " + p2 : ""}** `
+    );
 
-    // Fix extra line breaks
+    // Minimize excessive empty lines
     structured = structured.replace(/\n{3,}/g, "\n\n");
 
     return structured.trim();
   };
 
-  // Clean + format text
   const displayedContent =
     message.role === "assistant"
       ? autoStructureText(stripUrlsAndMeta(message.content))
       : message.content;
 
-  // For structured rendering (same detection logic as before)
-  const shouldConvertToBullets = message.role === "assistant" && message.id !== "1";
+  // Animated reveal: token by token (preserve spacing)
+  const [typedContent, setTypedContent] = useState<string>(displayedContent);
+  const timersRef = useRef<number[]>([]);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const animKeyRef = useRef<number>(0);
 
-  // Parse structured blocks (unchanged logic)
-  type StructuredBlock =
-    | { type: "list"; items: string[] }
-    | { type: "section"; title: string; content: string | string[] }
-    | { type: "paragraph"; text: string };
+  useEffect(() => {
+    animKeyRef.current += 1;
+    const myKey = animKeyRef.current;
 
-  const parseStructured = (text: string): StructuredBlock[] => {
-    if (!text) return [];
-    const lines = text.split(/\r?\n/).map((l) => l.trim());
-    const blocks: StructuredBlock[] = [];
-    let i = 0;
+    const shouldAnimate = message.role === "assistant" && isLatest && animationEnabled;
 
-    while (i < lines.length) {
-      const line = lines[i];
-
-      // Detect section
-      if (/:\s*$/.test(line)) {
-        const title = line.replace(/:$/, "").trim();
-        i++;
-        const contentLines: string[] = [];
-        while (i < lines.length && lines[i].trim() !== "" && !/:\s*$/.test(lines[i])) {
-          contentLines.push(lines[i]);
-          i++;
-        }
-        const content = contentLines.join(" ").trim();
-        if (content.match(/^(\s*[-*•]|\s*\d+\.)\s+/)) {
-          const items = content
-            .split(/\r?\n/)
-            .map((l) => l.replace(/^(\s*[-*•]|\s*\d+\.)\s+/, "").trim())
-            .filter(Boolean);
-          blocks.push({ type: "section", title, content: items });
-        } else {
-          blocks.push({ type: "section", title, content });
-        }
-        continue;
-      }
-
-      // Detect list
-      if (/^(\s*[-*•]|\s*\d+\.)\s+/.test(line)) {
-        const items: string[] = [];
-        while (i < lines.length && /^(\s*[-*•]|\s*\d+\.)\s+/.test(lines[i])) {
-          items.push(lines[i].replace(/^(\s*[-*•]|\s*\d+\.)\s+/, "").trim());
-          i++;
-        }
-        blocks.push({ type: "list", items });
-        continue;
-      }
-
-      // Paragraph fallback
-      if (line.trim() !== "") {
-        const paraLines: string[] = [];
-        while (i < lines.length && lines[i].trim() !== "") {
-          paraLines.push(lines[i]);
-          i++;
-        }
-        blocks.push({ type: "paragraph", text: paraLines.join(" ") });
-      } else {
-        i++;
-      }
+    if (!shouldAnimate) {
+      timersRef.current.forEach((t) => clearTimeout(t));
+      timersRef.current = [];
+      setTypedContent(displayedContent);
+      setIsAnimating(false);
+      return;
     }
 
-    return blocks;
+    if (!displayedContent) {
+      setTypedContent("");
+      setIsAnimating(false);
+      return;
+    }
+
+    setTypedContent("");
+    setIsAnimating(true);
+    timersRef.current.forEach((t) => clearTimeout(t));
+    timersRef.current = [];
+
+    const tokens = displayedContent.match(/(\S+|\s+)/g) || [];
+
+    let accumulatedDelay = 0;
+    tokens.forEach((token, idx) => {
+      const isWhitespace = /^\s+$/.test(token);
+      const delayForThis = isWhitespace ? 0 : wordDelayMs;
+      accumulatedDelay += delayForThis;
+
+      const t = window.setTimeout(() => {
+        if (animKeyRef.current !== myKey) return;
+        setTypedContent((prev) => prev + token);
+        if (idx === tokens.length - 1) {
+          setIsAnimating(false);
+        }
+      }, accumulatedDelay);
+
+      timersRef.current.push(t);
+    });
+
+    return () => {
+      timersRef.current.forEach((t) => clearTimeout(t));
+      timersRef.current = [];
+      setIsAnimating(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message, displayedContent, isLatest, animationEnabled, wordDelayMs]);
+
+  const handleSkipAnimation = () => {
+    if (!isAnimating) return;
+    timersRef.current.forEach((t) => clearTimeout(t));
+    timersRef.current = [];
+    setTypedContent(displayedContent);
+    setIsAnimating(false);
   };
 
-  const structured = shouldConvertToBullets ? parseStructured(displayedContent) : [];
+  // Code block renderer with one-click copy
+  const CodeBlockRenderer = ({ inline, className, children }: any) => {
+    const codeString = String(children).replace(/\n$/, "");
+    const isBlock = !inline;
+    const language = className ? className.replace("language-", "") : "";
+
+    const [copied, setCopied] = useState(false);
+    const copy = async () => {
+      try {
+        await navigator.clipboard.writeText(codeString);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1500);
+      } catch {}
+    };
+
+    if (!isBlock) {
+      return <code className={cn("inline-code")}>{codeString}</code>;
+    }
+
+    return (
+      <div className="code-block">
+        <div className="code-block-header">
+          <span className="code-lang">{language || "code"}</span>
+          <button className="code-copy-btn" onClick={copy} aria-label="Copy code">
+            <Clipboard className="h-4 w-4" />
+            <span className="code-copy-text">{copied ? "Copied!" : "Copy"}</span>
+          </button>
+        </div>
+        <pre className="code-pre">
+          <code className={className}>{codeString}</code>
+        </pre>
+      </div>
+    );
+  };
+
+  const contentToRender = isAnimating ? typedContent : displayedContent;
 
   return (
     <div
@@ -208,7 +252,6 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
-      {/* Avatar */}
       <Avatar
         className={cn(
           "h-10 w-10 shadow-sm transition-all chat-avatar-border",
@@ -224,7 +267,6 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
         </AvatarFallback>
       </Avatar>
 
-      {/* Message Content */}
       <div
         className={cn(
           "flex max-w-[75%] flex-col gap-2",
@@ -232,68 +274,22 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
         )}
       >
         <div
+          onClick={handleSkipAnimation}
           className={cn(
             "rounded-2xl px-5 py-3 shadow-sm transition-all hover:shadow-md",
             isUser
               ? "bg-primary text-primary-foreground rounded-br-sm"
-              : "bg-card border rounded-bl-sm"
+              : "bg-card border rounded-bl-sm",
+            isAnimating ? "cursor-pointer" : ""
           )}
         >
-          {/* Render assistant structured output */}
-          {message.role === "assistant" && shouldConvertToBullets ? (
-            structured.map((blk, idx) => {
-              if (blk.type === "list") {
-                return (
-                  <ul key={idx} className="list-disc ml-4 text-sm leading-relaxed">
-                    {blk.items.map((it, j) => (
-                      <li key={j}>
-                        <div className="inline prose-sm max-w-none">
-                          <ReactMarkdown>{it}</ReactMarkdown>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                );
-              }
-              if (blk.type === "section") {
-                return (
-                  <div key={idx} className="mt-2">
-                    <strong className="text-sm font-semibold">{blk.title}</strong>
-                    {Array.isArray(blk.content) ? (
-                      <ul className="list-disc ml-6 text-sm leading-relaxed">
-                        {blk.content.map((it, j) => (
-                          <li key={j}>
-                            <div className="inline prose-sm max-w-none">
-                              <ReactMarkdown>{it}</ReactMarkdown>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="mt-1 text-sm leading-relaxed prose-sm max-w-none">
-                        <ReactMarkdown>{blk.content}</ReactMarkdown>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return (
-                <div
-                  key={idx}
-                  className="whitespace-pre-wrap break-words text-sm leading-relaxed prose-sm max-w-none"
-                >
-                  <ReactMarkdown>{blk.text}</ReactMarkdown>
-                </div>
-              );
-            })
-          ) : (
-            <div className="whitespace-pre-wrap break-words text-sm leading-relaxed prose-sm max-w-none">
-              <ReactMarkdown>{displayedContent}</ReactMarkdown>
-            </div>
-          )}
+          <div className="whitespace-pre-wrap break-words text-sm leading-relaxed prose-sm max-w-none">
+            <ReactMarkdown components={{ code: CodeBlockRenderer }}>
+              {contentToRender}
+            </ReactMarkdown>
+          </div>
 
-          {/* Inline link buttons */}
-          {!isUser && links.length > 0 && (
+          {!isUser && links.length > 0 && !isAnimating && (
             <div className="mt-3 flex flex-col gap-2">
               {links.map((it) => (
                 <button
@@ -305,11 +301,6 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="truncate font-medium">{it.domain}</span>
-                      {it.precision && (
-                        <span className="text-xs opacity-90 bg-slate-100 px-2 py-0.5 rounded-md text-slate-800">
-                          Precision {it.precision}
-                        </span>
-                      )}
                     </div>
                     <span className="ml-3 text-xs uppercase text-slate-700">Visit</span>
                   </div>
@@ -318,6 +309,7 @@ export const ChatMessage = ({ message, isLatest = false }: ChatMessageProps) => 
             </div>
           )}
         </div>
+
         <span className="px-2 text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
       </div>
     </div>
