@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Suspense, lazy, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-career-flow.jpg";
 
 const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const handleStartJourney = () => navigate("/login");
+
   // Added: theme state persisted to localStorage and applied to document.documentElement
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
@@ -85,7 +89,12 @@ const Hero = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="hero" size="lg" className="group w-full sm:w-auto">
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className="group w-full sm:w-auto"
+                  onClick={handleStartJourney}
+                >
                   Start Your Journey
                   <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
