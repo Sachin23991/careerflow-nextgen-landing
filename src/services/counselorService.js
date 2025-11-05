@@ -2,9 +2,7 @@
 
 // Prefer an env var in production; falls back to your Space endpoint.
 // Example: REACT_APP_COUNSEL_API_URL=https://<your-space>.hf.space/counsel
-const DEFAULT_API_URL =
-  process.env.REACT_APP_COUNSEL_API_URL ||
-  'https://sachin21112004-dreamflow-ai.hf.space/counsel';
+const DEFAULT_API_URL = 'https://sachin21112004-dreamflow-ai.hf.space/counsel';
 
 /**
  * Stream a response from the FastAPI /counsel endpoint.

@@ -24,22 +24,20 @@ const redirectAfterAuth = async (user: any, navigate: any, showNotification: any
     try {
         const docRef = doc(db, "users", user.uid);
         const snap = await getDoc(docRef);
-        if (!snap.exists() || !snap.data().quizCompleted) {
-            if (!snap.exists()) {
-                 // Initialize user data if not present (e.g., first time Google sign-in)
-                 await setDoc(docRef, {
-                    email: user.email,
-                    displayName: user.displayName || "",
-                    quizCompleted: false,
-                });
-            }
-            navigate("/quiz");
-        } else {
-            navigate("/dashboard");
+        if (!snap.exists()) {
+            // Initialize user data if not present (e.g., first time sign-in)
+            await setDoc(docRef, {
+                email: user.email,
+                displayName: user.displayName || "",
+                quizCompleted: false,
+            });
         }
+        // Always navigate to dashboard after auth
+        navigate("/dashboard");
     } catch (err) {
-        console.error("Error checking quiz status", err);
-        navigate("/quiz");
+        console.error("Error checking/initializing user", err);
+        // On error, still proceed to dashboard to avoid blocking the user
+        navigate("/dashboard");
     }
 };
 
@@ -214,6 +212,8 @@ export default function AuthContainer({ initialView = 'login' }: { initialView?:
             {/* Floating Shapes Background */}
             <div className="floating-shapes">
                 <div className="shape shape-1"></div>
+                <div className="shape shape-2"></div>
+                <div className="shape shape-3"></div>
                 <div className="shape shape-2"></div>
                 <div className="shape shape-3"></div>
                 <div className="shape shape-4"></div>
