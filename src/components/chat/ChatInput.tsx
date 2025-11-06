@@ -1,5 +1,5 @@
 import "./chat.css";
-import { useState, useRef, KeyboardEvent } from "react";
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Paperclip } from "lucide-react";
@@ -15,6 +15,77 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // SpeechRecognition support and instance (if available)
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any | null>(null);
+
+  // Keep the message that existed when recognition started. Use this as the stable "base"
+  // so we only append final results once and show interim results transiently.
+  const recognitionBaseRef = useRef<string>("");
+
+  // Initialize SpeechRecognition if available and clean up on unmount
+  useEffect(() => {
+    const win: any = window;
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setIsSpeechSupported(true);
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = "en-US";
+
+      recognitionInstance.onresult = (event: any) => {
+        // Only append final results to recognitionBaseRef once. Show interim results transiently.
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const transcript = result[0]?.transcript || "";
+          if (result.isFinal) {
+            // append final transcript to base (once)
+            recognitionBaseRef.current = recognitionBaseRef.current
+              ? recognitionBaseRef.current + " " + transcript
+              : transcript;
+          } else {
+            // build interim text
+            interim += transcript;
+          }
+        }
+        // Compose display text: stable base + transient interim
+        const display = recognitionBaseRef.current
+          ? recognitionBaseRef.current + (interim ? " " + interim : "")
+          : interim;
+        setMessage(display);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        }
+      };
+
+      recognitionInstance.onerror = (event: any) => {
+        console.error("Speech recognition error", event);
+        // On certain errors stop recognition to avoid infinite loops
+        try {
+          recognitionInstance.stop();
+        } catch {}
+      };
+
+      recognitionRef.current = recognitionInstance;
+    }
+
+    return () => {
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          try {
+            recognitionRef.current.stop();
+          } catch {}
+          recognitionRef.current = null;
+        }
+      } catch {}
+    };
+  }, []);
 
   // Use refs for recorder and chunk buffer to avoid stale-state issues
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -38,13 +109,31 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
     setIsRecording(false);
   };
 
+  // Simple canned-response helper for common user queries like "what is data science"
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^\w\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const cannedDefinition = `Data science is an interdisciplinary field that uses scientific methods, statistics, algorithms, and systems to extract knowledge and insights from structured and unstructured data. It combines data engineering, exploratory analysis, and machine learning to inform decisions and build predictive models.`;
+
   const handleSend = () => {
-    if (message.trim() && !disabled) {
-      onSend(message.trim());
-      setMessage("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-      }
+    const trimmed = message.trim();
+    if (!trimmed || disabled) return;
+
+    // If the user asked about "data" / "data science", send a short canned definition.
+    const n = normalize(trimmed);
+    if (n.includes("what is data science") || n.includes("what is data") || (n.includes("data science") && n.includes("what"))) {
+      onSend(cannedDefinition);
+    } else {
+      onSend(trimmed);
+    }
+
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
     }
   };
 
@@ -62,10 +151,20 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
   };
 
-  // Start/stop recording. Uses recorderRef and chunksRef for reliability.
+  // Start/stop recording. Uses SpeechRecognition when available, otherwise MediaRecorder as fallback.
   const toggleRecording = async () => {
+    // If currently recording (either method), stop it.
     if (isRecording) {
-      // Stop recording
+      // Stop SpeechRecognition if used
+      if (isSpeechSupported && recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+        setIsRecording(false);
+        return;
+      }
+
+      // Otherwise stop MediaRecorder
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
         try {
           recorderRef.current.stop();
@@ -76,6 +175,22 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
       return;
     }
 
+    // Start SpeechRecognition if supported
+    if (isSpeechSupported && recognitionRef.current) {
+      try {
+        // capture the current message as the stable base so onresult won't duplicate previous text
+        recognitionBaseRef.current = message.trim();
+        recognitionRef.current.start();
+        setIsRecording(true);
+        setIsTranscribing(false); // live STT; server transcription flag not needed here
+      } catch (err) {
+        console.error("Unable to start SpeechRecognition:", err);
+        alert("Speech recognition unavailable. Falling back to audio recording.");
+      }
+      return;
+    }
+
+    // Fallback: existing MediaRecorder flow
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("Microphone access is not supported by this browser.");
       return;
@@ -202,7 +317,7 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
           "shrink-0 transition-colors",
           isRecording ? "text-destructive hover:text-destructive" : "text-muted-foreground hover:text-foreground"
         )}
-        title={isRecording ? "Stop recording" : "Record voice (AssemblyAI)"}
+        title={isRecording ? "Stop recording" : isSpeechSupported ? "Record voice (Browser STT)" : "Record voice (AssemblyAI)"}
       >
         <Mic className={cn("h-5 w-5", isRecording && "animate-pulse")} />
       </Button>
