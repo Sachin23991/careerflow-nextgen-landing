@@ -123,15 +123,18 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
           const filename = `recording-${Date.now()}.webm`;
           form.append("file", blob, filename);
 
-          const resp = await fetch("/api/transcribe", {
+          // Use absolute origin to avoid potential basePath/relative routing issues
+          const apiUrl = `${window.location.origin}/api/transcribe`;
+
+          const resp = await fetch(apiUrl, {
             method: "POST",
             body: form,
           });
 
           if (!resp.ok) {
             const text = await resp.text();
-            console.error("Transcription API error:", text);
-            alert("Transcription failed. See console for details.");
+            console.error("Transcription API error:", resp.status, text);
+            alert(`Transcription failed (${resp.status}). See console for details.`);
             setIsTranscribing(false);
             return;
           }

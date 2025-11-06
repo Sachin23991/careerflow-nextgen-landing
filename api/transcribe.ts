@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
-import fs from "fs";
-import fetch from "node-fetch";
+import fs from "fs/promises";
 
 // Disable Next's body parser so formidable can parse multipart
 export const config = {
@@ -25,16 +24,18 @@ if (!ASSEMBLY_KEY) {
   // console.warn("Missing ASSEMBLYAI_API_KEY env var.");
 }
 
+// Use promise-based parse with reasonable options
 const parseForm = (req: NextApiRequest): Promise<formidable.Files> =>
   new Promise((resolve, reject) => {
-    const form = new formidable.IncomingForm();
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      else resolve(files);
+    const form = formidable({ multiples: false, keepExtensions: true });
+    form.parse(req, (err, _fields, files) => {
+      if (err) return reject(err);
+      resolve(files);
     });
   });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
+  console.log("[transcribe] handler invoked", req.method, "content-type:", req.headers["content-type"]);
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
@@ -49,32 +50,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // "file" input name expected from the frontend
     const fileEntry = (files as any).file;
     if (!fileEntry) {
+      console.error("No file field in uploaded form:", Object.keys(files || {}));
       return res.status(400).json({ error: "No file uploaded" });
     }
 
     // formidable returns an array for multiple files or an object for one; normalize
     const fileObject = Array.isArray(fileEntry) ? fileEntry[0] : fileEntry;
-    const filePath = fileObject.filepath || fileObject.path || fileObject.file;
-    if (!filePath || !fs.existsSync(filePath)) {
+    // Accept common filepath properties used by different formidable versions
+    const filePath = fileObject?.filepath || fileObject?.filepath || fileObject?.path || fileObject?.file;
+    if (!filePath) {
+      console.error("Uploaded file object missing filepath property:", fileObject);
       return res.status(400).json({ error: "Uploaded file missing on server" });
     }
 
-    const buffer = fs.readFileSync(filePath);
+    // Read file as buffer using fs.promises
+    let buffer: Buffer;
+    try {
+      buffer = await fs.readFile(filePath);
+    } catch (readErr) {
+      console.error("Failed to read uploaded file:", readErr);
+      // attempt cleanup if possible
+      try { await fs.unlink(filePath); } catch {}
+      return res.status(500).json({ error: "Failed to read uploaded file on server" });
+    }
+
+    // Convert Buffer to Uint8Array (ArrayBufferView) so fetch accepts it in TypeScript
+    const uploadBody = new Uint8Array(buffer);
 
     // 1) Upload to AssemblyAI /v2/upload
     const uploadResp = await fetch(ASSEMBLYAI_UPLOAD_URL, {
       method: "POST",
       headers: {
         Authorization: ASSEMBLY_KEY,
-        "Transfer-Encoding": "chunked",
+        // let fetch manage transfer encoding; content-type is octet-stream for raw bytes
         "Content-Type": "application/octet-stream",
       },
-      body: buffer,
+      body: uploadBody,
     });
 
     if (!uploadResp.ok) {
       const txt = await uploadResp.text();
-      console.error("AssemblyAI upload failed:", txt);
+      console.error("AssemblyAI upload failed:", uploadResp.status, txt);
+      try { await fs.unlink(filePath); } catch {}
       return res.status(500).json({ error: "Upload to AssemblyAI failed" });
     }
 
@@ -82,6 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const audio_url = uploadJson.upload_url;
     if (!audio_url) {
       console.error("AssemblyAI upload did not return upload_url:", uploadJson);
+      try { await fs.unlink(filePath); } catch {}
       return res.status(500).json({ error: "AssemblyAI upload did not return an upload_url" });
     }
 
@@ -94,7 +112,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       body: JSON.stringify({
         audio_url,
-        // optional config tweaks:
         auto_chapters: false,
         punctuate: true,
         format_text: true,
@@ -103,7 +120,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     if (!createResp.ok) {
       const txt = await createResp.text();
-      console.error("AssemblyAI create transcript failed:", txt);
+      console.error("AssemblyAI create transcript failed:", createResp.status, txt);
+      try { await fs.unlink(filePath); } catch {}
       return res.status(500).json({ error: "Failed to create transcript" });
     }
 
@@ -111,6 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const transcriptId = createData.id;
     if (!transcriptId) {
       console.error("Missing transcript id:", createData);
+      try { await fs.unlink(filePath); } catch {}
       return res.status(500).json({ error: "Missing transcript id from AssemblyAI" });
     }
 
@@ -123,7 +142,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
       if (!pollResp.ok) {
         const txt = await pollResp.text();
-        console.error("AssemblyAI poll error:", txt);
+        console.error("AssemblyAI poll error:", pollResp.status, txt);
+        try { await fs.unlink(filePath); } catch {}
         return res.status(500).json({ error: "AssemblyAI polling failed" });
       }
       const pollData = await pollResp.json();
@@ -132,7 +152,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         transcriptText = pollData.text || "";
         break;
       } else if (status === "error") {
-        console.error("AssemblyAI reported error:", pollData.error);
+        console.error("AssemblyAI reported error:", pollData.error, pollData);
+        try { await fs.unlink(filePath); } catch {}
         return res.status(500).json({ error: `Transcription failed: ${pollData.error}` });
       }
       // Wait before next poll (500ms -> up to ~30 seconds)
@@ -141,7 +162,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     // Cleanup temp file
     try {
-      fs.unlinkSync(filePath);
+      await fs.unlink(filePath);
     } catch (e) {
       // ignore cleanup errors
     }

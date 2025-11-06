@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "globalfinanceconsultant-bf13a",
+  "private_key_id": "54bbeab60bfc3a35df985f0c914797a07998842b",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDMGX8FPQc0ervv\nF49oCcfWYlNSUM354KmSsiMQkTp40JxZzeYQsA1hig3//zLJeEigPaQEu5PLqRSO\nYR+dcC+gdzOUkAGSKrv3kCK2OUvmPHprZ/oATLD8I33i+hH+2vMshE3c7chBZ/QZ\na7NaOq5o/JtSpXSM7aDzyNvP5eY4ApYcJlC2acJcUH23xMEACj+KIb/iFTovW/Za\nMdYMFFo90JGtFmizq7WYI9t7Oo+PHCTKhvd4heB9br2bYSsAfFZ36aMWeM3maKLF\nAkWz0Ofy4KtDAhu81nlA2UbivK7CzIpXyPKltB1DiOdnSyNccE6YbDgkaHnPejck\nIVZcjXRdAgMBAAECggEAD8OwYfEyy0TnmzIQq5KF0vNJSERhhHlr357OworVH1vN\nl8oliQhwICaPqkRF4fXedjIMpyjt438tzUmHLZvqsdRDMahl1qpiVl7Vr4mBaUkm\nk4E2eCt0SCVdpdh25152Bew6L2RWYWbsHcKJ2eBKdGV+gcWx2OjJ08qh3878FztI\nliHwpNiczJEpk0U0WODaDmWWKGZkQrBdxIHmjBlIzTImtIBSHqKz99BbIsiYxoLO\nQ9ce0CkN2kywh3zhwd93dRRdUOBqjgoqNzK93cGX3sNx066OfiZWCiQLZavihxcb\nCso6LVvoB2yf0FdvXZ+NASidHjAWeTMJuMTizVnTQQKBgQDqoxgie87lDrBh//qB\nBbj8BE3lL3smVDgVieIQLqpVsRvXT0YOyeoz8lESNaAsDBOi5AzVVfowhcnuoy32\nCp/lDggw20ExuMx+SAqOLRAjNifS8oDwHa6wqLQga5tAytwoXoS7ETKFBVmgqElA\nL73IYL5rLRQRUH0b0vUtgniOBQKBgQDerqLTXDkTDZoiK1w4/psncTY9uFbiI4dh\n7sX1gS18r8FgUE9B/ozhTjb5Qi16HMvH3ErdfkqmZCVSpwJ+JtrbypXE5+L609ty\nZxJdlSSeSKQubwf9KPmmyZnlV4IdaDq32gyjn+51Yadf+9V/y8Da8Rk0GCQg0doQ\nTUxYesVEeQKBgQCakahjhxYLlTqixIOcnU14T8mU0kuZO1/a6INQz70MSGkj1Kg9\nM8yiPd4kVclXWvlQlFTT8RipAGm/WCX98I/W0ACbVsTC4Y9tHT4+3PbFi3Z+o5xH\nEfazj99hgCG9dCXGPkXIChMyyAx8JoBi1VB7gSfP6NlQcqqIOtejDFEolQKBgQDP\nP9PVSTjpbbhtYtOzS+uVWv2zldRvJcgDspnVc4OlT2J3xGbvsfzmWMg7VodC5ngW\nrAWVfcv2brB562wbgwgglbyshXEwJ2tPX3StWni5RDxh5v6VdMRdobY0yCwWOIKl\nyDAJPXlPEDMZ1yWOilEUtF3TqUA+t3DvyTFsC997aQKBgQCOAJIXYnPA4/uWaBYt\nfsD4GzcrJQq5V/NZv1v2rRDiDrRHNfHB7W4JflOkU6daVXZshRkxylJ8aKfIjUL5\nalspdlsL86++cH8VlG9mwneJwepT4Rt3/YGMN2aXDGt9rjt5Na6WinYzXZ7eVrQc\nm1LJgCrWv8p0vIHBtdmRXmo1EA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "speech-to-text@globalfinanceconsultant-bf13a.iam.gserviceaccount.com",
+  "client_id": "109412200186057936201",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/speech-to-text%40globalfinanceconsultant-bf13a.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
