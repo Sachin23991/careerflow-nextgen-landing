@@ -8,6 +8,9 @@ import CareerAssistant from "./pages/CareerAssistant";
 import NotFound from "./pages/NotFound";
 import AuthContainer from "./pages/AuthContainer.tsx";
 import DashboardApp from "./pages/Dashboard.tsx";
+import ResumeBuilder from "./pages/ResumeBuilder";
+import ResumeBuilderHome from "./pages/resumebuilderhome";
+import { ResumeProvider } from "@/lib/resume-context";
 
 const queryClient = new QueryClient();
 
@@ -19,18 +22,21 @@ const AppContent = () => {
     // This function maps the dashboard's internal tab change (e.g., 'chatbot')
     // to an external React Router navigation (e.g., '/career-assistant').
     const handleDashboardNavigation = (tab: string) => {
-        // Dashboard.tsx sends 'chatbot' when Career Assistant is clicked.
         if (tab === 'chatbot') {
-            navigate('/career-assistant'); // Navigate to the dedicated chat route.
+            navigate('/career-assistant');
         } 
+        else if (tab === 'resume-builder') {
+            navigate('/resume-builder');
+        }
         // Add more navigation logic here for other dashboard tabs if needed
-        // else if (tab === 'resume-builder') { navigate('/resume-builder'); }
     };
 
     return (
         <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/career-assistant" element={<CareerAssistant />} />
+            <Route path="/resume-builder" element={<ResumeBuilderHome />} />
+            <Route path="/resume-builder/builder" element={<ResumeBuilder />} />
             <Route path="/login" element={<AuthContainer initialView="login" />} />
             <Route path="/signup" element={<AuthContainer initialView="signup" />} />
             <Route path="/auth" element={<AuthContainer initialView="login" />} />
@@ -51,10 +57,13 @@ const App = () => (
         <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-                {/* 3. Render the component that uses useNavigate */}
-                <AppContent /> 
-            </BrowserRouter>
+            {/* Provide resume context to the entire app so pages like ResumeBuilder can use useResume() */}
+            <ResumeProvider>
+              <BrowserRouter>
+                  {/* 3. Render the component that uses useNavigate */}
+                  <AppContent /> 
+              </BrowserRouter>
+            </ResumeProvider>
         </TooltipProvider>
     </QueryClientProvider>
 );

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Home, MessageSquare, FileText, Search, Award, BookOpen, GraduationCap, Users } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,6 +20,22 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     { id: 'college-finder', label: 'College Finder', icon: GraduationCap },
     { id: 'mentorship', label: 'Mentorship', icon: Users },
   ];
+
+  // map menu ids to app routes; add routes as needed
+  const routeFor = (id: string) => {
+    const map: Record<string, string | null> = {
+      'dashboard': '/',
+      'chatbot': '/chatbot',
+      'resume-builder': '/resume-builder',
+      'resume-analyzer': '/resume-analyzer',
+      'job-finder': '/job-finder',
+      'scholarship-finder': '/scholarship-finder',
+      'course-recommender': '/course-recommender',
+      'college-finder': '/college-finder',
+      'mentorship': '/mentorship',
+    };
+    return map[id] ?? null;
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col transition-all duration-300 z-30">
@@ -46,16 +63,32 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          const href = routeFor(item.id);
+          const commonClass = `w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 group ${
+            isActive
+              ? 'bg-gray-900 text-white shadow-md dark:bg-slate-700 dark:text-white'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800'
+          }`;
 
-          return (
+          // If a route exists for the item, use react-router Link for client-side navigation and still call onTabChange
+          return href ? (
+            <Link
+              key={item.id}
+              to={href}
+              onClick={() => onTabChange(item.id)}
+              className={commonClass}
+            >
+              <Icon
+                size={20}
+                className={`transition-transform duration-200 ${!isActive ? 'group-hover:scale-110' : ''} ${isActive ? 'text-white' : 'text-gray-700 dark:text-white'}`}
+              />
+              <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-700 dark:text-white'}`}>{item.label}</span>
+            </Link>
+          ) : (
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 group ${
-                isActive
-                  ? 'bg-gray-900 text-white shadow-md dark:bg-slate-700 dark:text-white'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800'
-              }`}
+              className={commonClass}
             >
               <Icon
                 size={20}
