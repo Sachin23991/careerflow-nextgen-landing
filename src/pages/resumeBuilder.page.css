@@ -1,0 +1,29 @@
+/* page root gradient for light mode; dark mode falls back to none */
+.resumeBuilderRoot {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(255,255,255,1) 50%, rgba(0,0,0,0.04) 100%)important;
+  /* ensure the gradient covers full area */
+  min-height: 100vh;
+}
+
+/* when your app toggles dark mode via a .dark class on html/body */
+.dark .resumeBuilderRoot {
+  background: none;
+}
+
+/* header transparent with blur so gradient shows through */
+.resumeHeader {
+  background-color: transparent;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* darker translucent header in dark mode for readability */
+.dark .resumeHeader {
+  background-color: rgba(15,23,42,0.7); /* slate-900/70 */
+}
+
+/* ensure logo image has no background artifact */
+.logoImg {
+  background-color: transparent !important;
+  display: block;
+}

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./resumeBuilder.page.css";
 import { useResume } from "@/lib/resume-context";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -18,6 +20,7 @@ import { FinalPreviewStep } from "@/components/resume-builder/FinalPreviewStep";
 
 export default function ResumeBuilder() {
   const { resumeData, updateResumeData } = useResume();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
@@ -55,23 +58,59 @@ export default function ResumeBuilder() {
     ? steps[currentStep].component 
     : null;
 
+  // auto-advance for selection-style steps (0:Stream,1:Degree,2:JobRole,3:Tone,11:Template)
+  const autoAdvanceSteps = new Set<number>([0, 1, 2, 3, 11]);
+
+  // wrapper that delegates to resume context update and auto-advances on selection steps
+  const updateDataAndMaybeAdvance = (patch: any) => {
+    // forward update to context
+    updateResumeData(patch);
+
+    // if current step is a selection step, advance immediately (small delay for UX)
+    if (autoAdvanceSteps.has(currentStep)) {
+      // small timeout to let child updates settle — adjust if needed
+      setTimeout(() => {
+        setCurrentStep((s) => Math.min(s + 1, steps.length));
+        window.scrollTo(0, 0);
+      }, 120);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-background sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col resumeBuilderRoot">
+      <header className="resumeHeader border-b sticky top-0 z-50">
         <div className="container px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">
-              R
-            </div>
-            <div>
-              <span className="font-semibold">Resume Builder</span>
-              <p className="text-xs text-muted-foreground">
-                Step {currentStep + 1} of {steps.length + 1}: {currentStep < steps.length ? steps[currentStep].name : "Preview"}
-              </p>
+            {/* clickable logo + title -> go to Resume Builder home */}
+            <button
+              onClick={() => navigate('/resume-builder')}
+              aria-label="Resume Builder Home"
+              className="flex items-center gap-3 focus:outline-none"
+            >
+              <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain logoImg" />
+              <div>
+                <span className="font-semibold">Resume Builder</span>
+                <p className="text-xs text-muted-foreground">
+                  Step {currentStep + 1} of {steps.length + 1}: {currentStep < steps.length ? steps[currentStep].name : "Preview"}
+                </p>
+              </div>
+            </button>
+
+            {/* right side: conditional Dashboard (only on final) + ThemeToggle */}
+            <div className="ml-auto flex items-center gap-3">
+              {currentStep === steps.length && (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  aria-label="Go to dashboard"
+                  className="flex items-center gap-2 px-3 py-1 rounded-md bg-transparent hover:bg-accent/10 focus:outline-none"
+                >
+                  <img src="/logo.png" alt="Dashboard" className="h-4 w-4 object-contain logoImg" />
+                  <span className="hidden sm:inline text-sm">Dashboard</span>
+                </button>
+              )}
+              <ThemeToggle />
             </div>
           </div>
-          
-          <ThemeToggle />
         </div>
         
         <Progress value={progress} className="h-1" />
@@ -81,7 +120,7 @@ export default function ResumeBuilder() {
         {CurrentStepComponent ? (
           <CurrentStepComponent
             data={resumeData}
-            updateData={updateResumeData}
+            updateData={updateDataAndMaybeAdvance}
             onNext={handleNext}
             onBack={handleBack}
           />

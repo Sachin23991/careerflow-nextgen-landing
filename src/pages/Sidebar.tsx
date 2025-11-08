@@ -25,7 +25,8 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const routeFor = (id: string) => {
     const map: Record<string, string | null> = {
       'dashboard': '/',
-      'chatbot': '/chatbot',
+      // corrected path for Sancara AI / Career Assistant
+      'chatbot': '/career-assistant',
       'resume-builder': '/resume-builder',
       'resume-analyzer': '/resume-analyzer',
       'job-finder': '/job-finder',

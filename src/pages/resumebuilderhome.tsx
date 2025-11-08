@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import "./resumebuilderhome.page.css";
 import { HeroSection } from "@/components/HeroSection";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,8 +9,8 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b">
+    <div className="min-h-screen resumebuilderHomeRoot">
+      <header className="resumeHeader border-b">
         <div className="container px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             {/* left logo: replaces the "R" box */}
@@ -19,7 +20,7 @@ export default function Home() {
               className="h-8 w-8 rounded-md bg-transparent flex items-center justify-center focus:outline-none"
             >
               {/* use public/logo.png */}
-              <img src="/logo.png" alt="Resume Builder logo" className="h-8 w-8 object-contain bg-transparent" />
+              <img src="/logo.png" alt="Resume Builder logo" className="h-8 w-8 object-contain logoImg" />
             </button>
 
             <span className="font-semibold text-lg">Resume Builder</span>
@@ -33,7 +34,7 @@ export default function Home() {
               className="flex items-center gap-2 px-3 py-1 rounded-md bg-transparent hover:bg-accent/10 focus:outline-none"
             >
               {/* small logo/icon from public folder */}
-              <img src="/logo.png" alt="Dashboard" className="h-4 w-4 object-contain bg-transparent" />
+              <img src="/logo.png" alt="Dashboard" className="h-4 w-4 object-contain logoImg" />
               <span className="hidden sm:inline text-sm">Dashboard</span>
             </button>
 
