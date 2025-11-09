@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageSquare, FileText, Search, Award, BookOpen, GraduationCap, Users, TrendingUp, Clock, Target } from 'lucide-react';
 import FeatureCard, { StatCard } from './FeatureCard';
 import Sidebar from './Sidebar';
@@ -10,6 +10,24 @@ interface DashboardProps {
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  // Theme state persisted to localStorage and applied to the document root
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
+  );
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', theme);
+    }
+  }, [theme]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -92,12 +110,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <>
       <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-      <DashboardHeader />
-      <main className="ml-64 pt-20 p-8 min-h-screen">
+      <DashboardHeader theme={theme} setTheme={setTheme} />
+      <main className="ml-64 pt-20 p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="space-y-8">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Career Dashboard</h2>
-            <p className="text-gray-600">Track your progress and access all career tools in one place</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Your Career Dashboard</h2>
+            <p className="text-gray-600 dark:text-gray-300">Track your progress and access all career tools in one place</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -107,7 +125,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Access</h3>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Quick Access</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature) => (
                 <FeatureCard
