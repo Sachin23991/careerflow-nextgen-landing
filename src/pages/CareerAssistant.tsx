@@ -1,8 +1,23 @@
-// src/pages/CareerAssistant.tsx (Refactored + Welcome Screen)
+// src/pages/CareerAssistant.tsx (Refactored + Welcome Screen + PDF Download)
 
 import { useState, useEffect, useRef, SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+
+// --- Import new PDF generator ---
+import { generateConversationPdf } from "../lib/pdfGenerator";
+
+// --- Import Firebase services ---
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  doc,
+  getDoc,
+  Timestamp,
+} from 'firebase/firestore';
 
 // --- Component Imports ---
 import { MainHeader } from "../components/chat/MainHeader";
@@ -16,18 +31,22 @@ import { ArrowRight } from "lucide-react";
 
 import styles from "./CareerAssistant.module.css";
 
+// --- Define Message type (can be shared) ---
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
 const CareerAssistant = () => {
   const navigate = useNavigate();
-
-  // --- View State (RESTORED) ---
-  // Controls showing the welcome screen or the main chat app
   const [view, setView] = useState<"welcome" | "chat">("welcome");
-
-  // --- Auth State ---
   const [user, setUser] = useState<User | null>(null);
-
-  // --- Session State ---
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // --- Add state for PDF generation ---
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // --- Lifted State (Shared) ---
   const [animationEnabled, setAnimationEnabled] = useState<boolean>(() => {
@@ -60,7 +79,6 @@ const CareerAssistant = () => {
   });
 
   // --- Logo Logic (RESTORED for Welcome Screen) ---
-  // This is needed by both the Welcome screen and MainHeader
   const [logoSrc, setLogoSrc] = useState<string>("/logo.png");
   const logoFallbacks = ["/logo.png", "/logo.svg", "/logo.webp", "/logo"];
   const logoTryIndex = useRef(0);
@@ -84,8 +102,6 @@ const CareerAssistant = () => {
         setUser(currentUser);
       } else {
         setUser(null);
-        // Redirect to login if user is not authenticated
-        // Keep the welcome screen logic separate from auth redirect
         navigate("/"); 
       }
     });
@@ -128,9 +144,54 @@ const CareerAssistant = () => {
 
   const handleHomeClick = () => {
     setSessionId(null);
-    // Note: This does NOT return to the welcome screen, just starts a new chat.
-    // This is intentional, as the welcome screen is an entry-point.
   };
+
+  // --- NEW: PDF Download Handler ---
+  const handleDownloadPdf = async () => {
+    if (!user || !sessionId) {
+      alert("Please select a conversation to download.");
+      return;
+    }
+
+    setIsDownloadingPdf(true);
+    try {
+      // 1. Fetch Session Title
+      const sessionRef = doc(db, 'users', user.uid, 'sessions', sessionId);
+      const sessionDoc = await getDoc(sessionRef);
+      const sessionTitle = sessionDoc.data()?.title || "Chat Conversation";
+
+      // 2. Fetch all messages for that session
+      const messagesRef = collection(db, 'users', user.uid, 'sessions', sessionId, 'messages');
+      const q = query(messagesRef, orderBy('timestamp', 'asc'));
+      const snapshot = await getDocs(q);
+
+      const messages: Message[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          role: data.role,
+          content: data.content,
+          timestamp: (data.timestamp as Timestamp).toDate(),
+        };
+      });
+      
+      if (messages.length === 0) {
+          alert("This conversation is empty.");
+          setIsDownloadingPdf(false); // Reset state
+          return;
+      }
+
+      // 3. Generate and download PDF
+      await generateConversationPdf(sessionTitle, messages);
+
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert("An error occurred while generating the PDF. Please check the console.");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
 
   // --- Render Logic ---
 
@@ -213,6 +274,9 @@ const CareerAssistant = () => {
         speedSetting={speedSetting}
         setSpeedSetting={setSpeedSetting}
         onHomeClick={handleHomeClick}
+        // --- Pass PDF props down ---
+        onDownloadPdf={handleDownloadPdf}
+        isDownloadingPdf={isDownloadingPdf}
       />
 
       <div className="flex flex-1 overflow-hidden">

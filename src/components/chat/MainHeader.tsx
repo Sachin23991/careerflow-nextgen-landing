@@ -1,9 +1,10 @@
-// src/components/chat/MainHeader.tsx (NEW FILE)
+// src/components/chat/MainHeader.tsx (Updated)
 
 import { useState, useRef, SyntheticEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, Sun, Moon } from 'lucide-react';
+// --- Import Download icon ---
+import { Settings, Sun, Moon, Download } from 'lucide-react';
 import styles from '../../pages/CareerAssistant.module.css';
 
 interface MainHeaderProps {
@@ -14,6 +15,10 @@ interface MainHeaderProps {
   speedSetting: 'fast' | 'normal' | 'slow';
   setSpeedSetting: (value: 'fast' | 'normal' | 'slow') => void;
   onHomeClick: (id: string | null) => void;
+  
+  // --- Add new props for PDF download ---
+  onDownloadPdf: () => void;
+  isDownloadingPdf?: boolean;
 }
 
 export const MainHeader = ({
@@ -24,10 +29,13 @@ export const MainHeader = ({
   speedSetting,
   setSpeedSetting,
   onHomeClick,
+  // --- Destructure new props ---
+  onDownloadPdf,
+  isDownloadingPdf = false,
 }: MainHeaderProps) => {
   const navigate = useNavigate();
   
-  // --- Logo logic ---
+  // --- Logo logic (no change) ---
   const [logoSrc, setLogoSrc] = useState<string>("/logo.png");
   const logoFallbacks = ["/logo.png", "/logo.svg", "/logo.webp", "/logo"];
   const logoTryIndex = useRef(0);
@@ -42,10 +50,9 @@ export const MainHeader = ({
 
   return (
     <header className={`${styles.header} border-b bg-card/50 backdrop-blur-sm z-10`}>
-      {/* Container is no longer needed, use w-full for full width */}
       <div className="flex w-full items-center justify-between px-6 py-4">
         
-        {/* Left Side: Logo & Title */}
+        {/* Left Side (no change) */}
         <div className="flex items-center gap-3">
           <div className={`${styles.headerLogo} flex items-center justify-center`} style={{ background: "transparent" }}>
             <img 
@@ -61,9 +68,11 @@ export const MainHeader = ({
           </div>
         </div>
 
-        {/* Right Side: Settings & Dashboard */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 border rounded-md px-3 py-1 bg-card/60">
+        {/* Right Side: Settings & Dashboard (UPDATED) */}
+        <div className="flex items-center gap-2"> {/* Reduced gap for more space */}
+          
+          {/* Settings (no change) */}
+          <div className="hidden lg:flex items-center gap-2 border rounded-md px-3 py-1 bg-card/60">
             <Settings className="h-4 w-4 opacity-80" />
             <label className="text-xs text-muted-foreground mr-2">Animate replies</label>
             <Button
@@ -76,7 +85,7 @@ export const MainHeader = ({
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 border rounded-md px-3 py-1 bg-card/50">
+          <div className="hidden lg:flex items-center gap-2 border rounded-md px-3 py-1 bg-card/50">
             <label className="text-xs text-muted-foreground">Speed</label>
             <select
               value={speedSetting}
@@ -91,6 +100,18 @@ export const MainHeader = ({
 
           <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} className="gap-2">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          
+          {/* --- ADDED DOWNLOAD BUTTON --- */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onDownloadPdf} 
+            disabled={isDownloadingPdf}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isDownloadingPdf ? "Downloading..." : "Download"}
           </Button>
           
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="gap-2">Dashboard</Button>

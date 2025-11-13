@@ -95,7 +95,14 @@ export const ChatInterface = ({
           timestamp: (data.timestamp as Timestamp).toDate(), 
         };
       });
-      setMessages(loadedMessages.length > 0 ? loadedMessages : initialMessages);
+      
+      // --- THIS IS THE FIX ---
+      // Original code: setMessages(loadedMessages.length > 0 ? loadedMessages : initialMessages);
+      // Corrected code:
+      // If a session is selected (sessionId is not null), we show its messages,
+      // even if it's an empty array. This is the correct state.
+      setMessages(loadedMessages); 
+
     });
     return () => unsubscribe(); 
   }, [sessionId, user.uid]); 
@@ -113,7 +120,15 @@ export const ChatInterface = ({
       content,
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    // --- Local state update ---
+    // If we are on a new chat (initialMessages), replace them with the user message.
+    // Otherwise, add to the existing messages.
+    setMessages((prev) => 
+      prev.length === 1 && prev[0].id === "1"
+        ? [userMessage] 
+        : [...prev, userMessage]
+    );
     setIsTyping(true);
     let activeSessionId = sessionId;
 
@@ -129,6 +144,7 @@ export const ChatInterface = ({
       }
 
       const messagesRef = collection(db, 'users', user.uid, 'sessions', activeSessionId, 'messages');
+      // Save the user message to Firestore
       await addDoc(messagesRef, {
         role: 'user',
         content: content,
@@ -150,9 +166,11 @@ export const ChatInterface = ({
             content: chunk,
             timestamp: new Date(),
           };
+          // Add the new assistant message shell to local state
           setMessages((prev) => [...prev, assistantMessage]);
           isFirstChunk = false;
         } else {
+          // Update the streaming assistant message in local state
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
@@ -179,6 +197,7 @@ export const ChatInterface = ({
         setIsTyping(false);
         if (activeSessionId && fullBotContent) {
           try {
+            // Save the full assistant message to Firestore
             const messagesRef = collection(db, 'users', user.uid, 'sessions', activeSessionId, 'messages');
             await addDoc(messagesRef, {
               role: 'assistant',
@@ -191,6 +210,7 @@ export const ChatInterface = ({
         }
       };
 
+      // Start the bot response stream
       await streamBotResponse(content, activeSessionId, onChunkReceived, onError, onStreamEnd);
 
     } catch (error) {
@@ -215,7 +235,9 @@ export const ChatInterface = ({
       {/* The 'messagesArea' and 'footer' remain */}
       <div className={`${styles.messagesArea} flex-1 overflow-y-auto`}>
         <div className="container mx-auto max-w-4xl px-6 py-8">
-          {messages.length === 1 && !isTyping && (
+          
+          {/* Show suggested prompts ONLY if it's the initial message */}
+          {messages.length === 1 && messages[0].id === "1" && !isTyping && (
             <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <SuggestedPrompts onSelectPrompt={handleSendMessage} />
             </div>

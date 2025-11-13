@@ -54,6 +54,7 @@
     "formidable": "^3.5.4",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.4.2",
+    "jspdf": "^3.0.3",
     "lucide-react": "^0.462.0",
     "next": "^16.0.1",
     "next-themes": "^0.3.0",

@@ -21,6 +21,19 @@ interface ChatMessageProps {
 
 type LinkItem = { url: string; domain: string; precision?: string };
 
+/**
+ * Improved ChatMessage:
+ * - sanitizeAssistantContent now canonically extracts and re-orders
+ *   Summary, Detailed Explanation/Explanation, Relevant Insights from:
+ *     - XML-like tags (<SUMMARY>...</SUMMARY>)
+ *     - Markdown headings (## Summary)
+ *     - Plain labelled lines ("Summary:", "Detailed Explanation")
+ *   and builds a clean markdown output where each section's content appears
+ *   directly beneath its heading (Summary → Detailed Explanation → Relevant Insights).
+ *
+ * This fixes the issue where headings appear but their content is shown later or detached.
+ */
+
 export const ChatMessage = ({
   message,
   isLatest = false,
@@ -70,9 +83,235 @@ export const ChatMessage = ({
     cleaned = cleaned.replace(/⭐+/g, "");
     cleaned = cleaned.replace(/\bURL:\b/gi, "");
     cleaned = cleaned.replace(/\bTitle:\b/gi, "");
-    // Preserve user-visible blank lines and asterisks for markdown. Trim overall edges.
     cleaned = cleaned.split(/\r?\n/).map((l) => l).join("\n");
     return cleaned.trim();
+  };
+
+  // New robust sanitizer that extracts sections wherever they appear
+  const sanitizeAssistantContent = (raw: string) => {
+    if (!raw) return "";
+
+    let text = raw;
+
+    // Normalize line endings
+    text = text.replace(/\r\n/g, "\n");
+
+    // Section keys and canonical order
+    const sectionKeys: { key: string; labels: string[] }[] = [
+      { key: "summary", labels: ["summary"] },
+      { key: "explanation", labels: ["detailed explanation", "explanation", "comprehensive explanation", "answer"] },
+      { key: "insights", labels: ["relevant insights", "insights"] },
+    ];
+
+    const sections: Record<string, string> = {
+      summary: "",
+      explanation: "",
+      insights: "",
+    };
+
+    // 1) XML tags extraction (highest-confidence)
+    try {
+      const xmlSummary = /<SUMMARY>([\s\S]*?)<\/SUMMARY>/i.exec(text);
+      const xmlExplanation = /<COMPREHENSIVE_EXPLANATION>([\s\S]*?)<\/COMPREHENSIVE_EXPLANATION>/i.exec(text);
+      const xmlInsights = /<RELEVANT_INSIGHTS>([\s\S]*?)<\/RELEVANT_INSIGHTS>/i.exec(text);
+
+      if (xmlSummary) sections.summary = (xmlSummary[1] || "").trim();
+      if (xmlExplanation) sections.explanation = (xmlExplanation[1] || "").trim();
+      if (xmlInsights) sections.insights = (xmlInsights[1] || "").trim();
+
+      // If we found any xml sections, assemble and return canonical order
+      if (xmlSummary || xmlExplanation || xmlInsights) {
+        const parts: string[] = [];
+        if (sections.summary) parts.push(`**Summary**\n\n${sections.summary}`);
+        if (sections.explanation) parts.push(`**Detailed Explanation**\n\n${sections.explanation}`);
+        if (sections.insights) {
+          // convert insights block into bullets when appropriate
+          const ins = sections.insights.trim();
+          const bullets = ins.split(/\n+/).filter(Boolean);
+          if (bullets.length > 1) {
+            parts.push(`**Relevant Insights**\n\n${bullets.map((b) => `- ${b.trim()}`).join("\n")}`);
+          } else if (ins) {
+            const sentences = ins.split(/(?<=[.!?])\s+/).filter(Boolean);
+            if (sentences.length > 1) {
+              parts.push(`**Relevant Insights**\n\n${sentences.map((s) => `- ${s.trim()}`).join("\n")}`);
+            } else {
+              parts.push(`**Relevant Insights**\n\n- ${ins}`);
+            }
+          }
+        }
+        // Append any non-XML remainder (sources/disclaimers) after removing xml blocks
+        const remainder = text.replace(/<SUMMARY>[\s\S]*?<\/SUMMARY>/gi, "")
+                              .replace(/<COMPREHENSIVE_EXPLANATION>[\s\S]*?<\/COMPREHENSIVE_EXPLANATION>/gi, "")
+                              .replace(/<RELEVANT_INSIGHTS>[\s\S]*?<\/RELEVANT_INSIGHTS>/gi, "")
+                              .trim();
+        if (remainder) {
+          const cleanedRem = remainder.replace(/\*?This answer is based on the model's knowledge[\s\S]*$/i, "").trim();
+          if (cleanedRem) parts.push(cleanedRem);
+        }
+        return parts.join("\n\n").trim();
+      }
+    } catch (e) {
+      // fallthrough to heading-based parsing
+    }
+
+    // 2) Heading/label-based extraction:
+    // We'll scan the text line-by-line, detect lines that are "labels" (markdown headings or plain labels),
+    // record their positions, then assign content between labels as that section's content.
+    const lines = text.split("\n");
+    type LabelPos = { idx: number; labelKey: string; line: string };
+    const foundLabels: LabelPos[] = [];
+
+    // Helper: match a line to one of our labels
+    const findLabelKey = (line: string): string | null => {
+      if (!line) return null;
+      const trimmed = line.trim();
+      // markdown headings like "## Summary" or "# Summary"
+      const mdHeadingMatch = trimmed.match(/^#{1,6}\s*(.+)$/);
+      const maybeLabel = mdHeadingMatch ? mdHeadingMatch[1].trim().toLowerCase() : trimmed.toLowerCase();
+      // also accept "Summary:" or "Summary -"
+      const cleanLabel = maybeLabel.replace(/[:\-–—]+$/, "").trim();
+
+      for (const sk of sectionKeys) {
+        for (const lbl of sk.labels) {
+          if (cleanLabel === lbl) return sk.key;
+        }
+      }
+      // also accept if the line equals the label (case-insensitive) even if not markdown
+      for (const sk of sectionKeys) {
+        for (const lbl of sk.labels) {
+          if (trimmed.toLowerCase().replace(/[:\-]+$/, "").trim() === lbl) return sk.key;
+        }
+      }
+      // accept "Summary:" inline as well (single-line label)
+      const inlineLabelMatch = trimmed.match(/^(.{3,80}?)\s*[:\-]\s*$/);
+      if (inlineLabelMatch) {
+        const candidate = inlineLabelMatch[1].toLowerCase().trim();
+        for (const sk of sectionKeys) {
+          for (const lbl of sk.labels) {
+            if (candidate === lbl) return sk.key;
+          }
+        }
+      }
+      return null;
+    };
+
+    for (let i = 0, pos = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const key = findLabelKey(line);
+      if (key) {
+        // record label position with index of the character
+        const lineStartIndex = pos;
+        foundLabels.push({ idx: lineStartIndex, labelKey: key, line });
+      }
+      pos += line.length + 1; // +1 for newline
+    }
+
+    if (foundLabels.length > 0) {
+      // Compute content ranges
+      // Map label occurrences to content: from after the label line to before next label line
+      const labelRanges: { key: string; start: number; end: number }[] = [];
+      for (let i = 0; i < foundLabels.length; i++) {
+        const startPos = foundLabels[i].idx;
+        // find index of end of that label line
+        // we need the character index of the end of the line
+        // recompute by scanning chars to the end of that line
+        const labelLine = foundLabels[i].line;
+        // compute start char index for content after line:
+        // find nth line start char index: sum lengths before (we already have idx); the content starts after that line plus newline
+        let startContent = startPos + labelLine.length;
+        // skip following newline if present
+        if (text[startContent] === "\n") startContent += 1;
+        const endContent = (i + 1 < foundLabels.length) ? foundLabels[i + 1].idx : text.length;
+        labelRanges.push({ key: foundLabels[i].labelKey, start: startContent, end: endContent });
+      }
+
+      // Extract and dedupe: concatenate content pieces if label occurs multiple times
+      for (const lr of labelRanges) {
+        const rawContent = text.slice(lr.start, lr.end).trim();
+        if (rawContent) {
+          // If explanation contains extra heading names, remove them (defensive)
+          const cleaned = rawContent.replace(/\n{2,}/g, "\n\n").trim();
+          if (!sections[lr.key]) sections[lr.key] = cleaned;
+          else sections[lr.key] += "\n\n" + cleaned;
+        }
+      }
+
+      // Additionally, if content exists before the first detected label, it likely belongs to 'explanation'
+      // if explanation is still empty, assign the leading content.
+      const firstLabelStart = foundLabels[0].idx;
+      if (firstLabelStart > 0) {
+        const leading = text.slice(0, firstLabelStart).trim();
+        if (leading && !sections.explanation) {
+          sections.explanation = leading;
+        } else if (leading && !sections.summary && leading.split(/\s+/).length < 40) {
+          // if it's short, treat leading as a summary when summary empty
+          sections.summary = leading;
+        }
+      }
+
+      // Build canonical output in order: Summary, Detailed Explanation, Relevant Insights
+      const parts: string[] = [];
+      if (sections.summary) parts.push(`**Summary**\n\n${sections.summary}`);
+      if (sections.explanation) parts.push(`**Detailed Explanation**\n\n${sections.explanation}`);
+      if (sections.insights) {
+        const ins = sections.insights.trim();
+        const bullets = ins.split(/\n+/).filter(Boolean);
+        if (bullets.length > 1) {
+          parts.push(`**Relevant Insights**\n\n${bullets.map((b) => `- ${b.trim()}`).join("\n")}`);
+        } else {
+          const sentences = ins.split(/(?<=[.!?])\s+/).filter(Boolean);
+          if (sentences.length > 1) {
+            parts.push(`**Relevant Insights**\n\n${sentences.map((s) => `- ${s.trim()}`).join("\n")}`);
+          } else {
+            parts.push(`**Relevant Insights**\n\n- ${ins}`);
+          }
+        }
+      }
+
+      // Append any trailing remainder after last label that isn't the same text (e.g., sources/disclaimers)
+      const lastLabelEnd = labelRanges[labelRanges.length - 1].end;
+      const trailing = text.slice(lastLabelEnd).trim();
+      if (trailing) {
+        const cleanedRem = trailing.replace(/\*?This answer is based on the model's knowledge[\s\S]*$/i, "").trim();
+        if (cleanedRem) parts.push(cleanedRem);
+      }
+
+      const assembled = parts.join("\n\n").trim();
+      // If result is empty, fallback to original text trimmed
+      return assembled || text.trim();
+    }
+
+    // 3) No labels detected: return the cleaned original (remove trailing disclaimers)
+    const fallback = text.replace(/\*?This answer is based on the model's knowledge[\s\S]*$/i, "").trim();
+    return fallback;
+  };
+
+  // Auto-structure but be conservative about what we treat as headers or list-keywords
+  const autoStructureText = (text: string): string => {
+    if (!text) return "";
+
+    let structured = text.trim();
+
+    // Only treat lines that start with a capitalized phrase followed by ":" as section headers
+    // (Require at least 2 words and a colon to reduce false positives)
+    structured = structured.replace(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){1,4}):/gm, "\n\n**$1:**");
+
+    // Add line breaks after periods followed by capital letter (keeps paragraphs readable)
+    structured = structured.replace(/\. ([A-Z])/g, ".\n\n$1");
+
+    // Add bullet points before numeric enumerations (add newline before enumerations)
+    structured = structured.replace(/(^|\n)\s*(\d+)\.\s+/g, "\n- ");
+
+    // Only match Step/Point/Process/Phase as whole words (avoid matching within words like 'processes')
+    // Capture optional number after the keyword and keep it in the bolded label.
+    structured = structured.replace(/\b(Step|Point|Process|Phase)\b\s*(\d*)[:\-]?\s*/gi, (_, p1, p2) =>
+      `\n- **${p1}${p2 ? " " + p2 : ""}** `
+    );
+
+    // Minimize excessive empty lines
+    structured = structured.replace(/\n{3,}/g, "\n\n");
+
+    return structured.trim();
   };
 
   const [links, setLinks] = useState<LinkItem[]>([]);
@@ -110,36 +349,13 @@ export const ChatMessage = ({
     }
   };
 
-  // Auto-structure but be conservative about what we treat as headers or list-keywords
-  const autoStructureText = (text: string): string => {
-    if (!text) return "";
-
-    let structured = text.trim();
-
-    // Only treat lines that start with a capitalized phrase followed by ":" as section headers
-    structured = structured.replace(/^([A-Z][A-Za-z\s]{2,40}):/gm, "\n\n**$1:**");
-
-    // Add line breaks after periods followed by capital letter (keeps paragraphs readable)
-    structured = structured.replace(/\. ([A-Z])/g, ".\n\n$1");
-
-    // Add bullet points before numeric enumerations
-    structured = structured.replace(/\b(\d+)\.\s+/g, "\n- ");
-
-    // Only match Step/Point/Process/Phase as whole words (avoid matching within words like 'processes')
-    // Capture optional number after the keyword and keep it in the bolded label.
-    structured = structured.replace(/\b(Step|Point|Process|Phase)\b\s*(\d*)[:\-]?\s*/gi, (_, p1, p2) =>
-      `\n- **${p1}${p2 ? " " + p2 : ""}** `
-    );
-
-    // Minimize excessive empty lines
-    structured = structured.replace(/\n{3,}/g, "\n\n");
-
-    return structured.trim();
-  };
-
+  // Compose displayedContent:
+  // - For assistant messages: sanitize legacy tags/headings first, strip metadata/URLs, then auto-structure.
+  // - For user messages: show raw content.
+  const assistantPreSanitized = message.role === "assistant" ? sanitizeAssistantContent(message.content) : message.content;
   const displayedContent =
     message.role === "assistant"
-      ? autoStructureText(stripUrlsAndMeta(message.content))
+      ? autoStructureText(stripUrlsAndMeta(assistantPreSanitized))
       : message.content;
 
   // Animated reveal: token by token (preserve spacing)
