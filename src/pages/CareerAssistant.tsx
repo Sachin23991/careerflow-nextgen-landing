@@ -1,50 +1,35 @@
-// CareerAssistant.tsx (updated: speed select class added so styles work in dark mode)
+// src/pages/CareerAssistant.tsx (Refactored + Welcome Screen)
 
-import { useState, useRef, useEffect, SyntheticEvent } from "react";
-import { ChatMessage } from "@/components/chat/ChatMessage";
-import { ChatInput } from "@/components/chat/ChatInput";
-import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
-import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { useState, useEffect, useRef, SyntheticEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+
+// --- Component Imports ---
+import { MainHeader } from "../components/chat/MainHeader";
+import { HistorySidebar } from "../components/chat/HistorySidebar";
+import { ChatInterface } from "../components/chat/ChatInterface";
+
+// --- UI Imports for Welcome Screen ---
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RotateCcw, ArrowRight, Settings } from "lucide-react";
-import { Sun, Moon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+
 import styles from "./CareerAssistant.module.css";
-// Service import
-import { streamBotResponse } from "../services/counselorService";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
-
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    role: "assistant",
-    content:
-      "Hello! I'm your Career Assistant, powered by AI. I can help you with career planning, resume advice, job search strategies, interview preparation, and much more. How can I assist you today?",
-    timestamp: new Date(),
-  },
-];
 
 const CareerAssistant = () => {
+  const navigate = useNavigate();
+
+  // --- View State (RESTORED) ---
+  // Controls showing the welcome screen or the main chat app
   const [view, setView] = useState<"welcome" | "chat">("welcome");
-  const [sessionId] = useState(
-    () => `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-  );
-  const navigateToDashboard = () => {
-    if (typeof window !== "undefined") {
-      window.location.href = "/dashboard";
-    }
-  };
 
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // --- Auth State ---
+  const [user, setUser] = useState<User | null>(null);
 
+  // --- Session State ---
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // --- Lifted State (Shared) ---
   const [animationEnabled, setAnimationEnabled] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
@@ -54,6 +39,7 @@ const CareerAssistant = () => {
       return true;
     }
   });
+
   const [speedSetting, setSpeedSetting] = useState<"fast" | "normal" | "slow">(() => {
     if (typeof window === "undefined") return "fast";
     try {
@@ -64,15 +50,17 @@ const CareerAssistant = () => {
     }
   });
 
-  const wordDelayMs = speedSetting === "fast" ? 20 : speedSetting === "normal" ? 30 : 50;
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const saved = localStorage.getItem("cf_theme");
+    if (saved === "dark" || saved === "light") return saved;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("cf_animation_enabled", animationEnabled ? "1" : "0");
-      localStorage.setItem("cf_speed", speedSetting);
-    } catch {}
-  }, [animationEnabled, speedSetting]);
-
+  // --- Logo Logic (RESTORED for Welcome Screen) ---
+  // This is needed by both the Welcome screen and MainHeader
   const [logoSrc, setLogoSrc] = useState<string>("/logo.png");
   const logoFallbacks = ["/logo.png", "/logo.svg", "/logo.webp", "/logo"];
   const logoTryIndex = useRef(0);
@@ -85,109 +73,34 @@ const CareerAssistant = () => {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
+  // --- Effects ---
+
+  // Auth effect
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
-
-  const stripAsterisks = (text: string) => {
-    if (!text) return text;
-    return text.replace(/\*\*/g, "");
-  };
-  const findUrls = (text: string) => {
-    if (!text) return [];
-    const urlRegex = /(https?:\/\/[^\s)]+)/g;
-    const matches = text.match(urlRegex);
-    return matches ? Array.from(new Set(matches)) : [];
-  };
-
-  const handleSendMessage = async (content: string) => {
-    setView("chat");
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsTyping(true);
-
-    const assistantMessageId = (Date.now() + 1).toString();
-    let isFirstChunk = true;
-
-    const onChunkReceived = (rawChunk: string) => {
-      const chunk = stripAsterisks(rawChunk);
-
-      if (isFirstChunk) {
-        const assistantMessage: Message = {
-          id: assistantMessageId,
-          role: "assistant",
-          content: chunk,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-        isFirstChunk = false;
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
       } else {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content: msg.content + chunk }
-              : msg
-          )
-        );
+        setUser(null);
+        // Redirect to login if user is not authenticated
+        // Keep the welcome screen logic separate from auth redirect
+        navigate("/"); 
       }
-    };
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
-    const onError = (error: Error) => {
-      console.error("Streaming error:", error);
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        role: "assistant",
-        content: `Sorry, I ran into a problem: ${error.message}. Please try again.`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-      setIsTyping(false);
-    };
-
-    const onStreamEnd = () => {
-      setIsTyping(false);
-    };
-
+  // LocalStorage effects for saving settings
+  useEffect(() => {
     try {
-      await streamBotResponse(content, sessionId, onChunkReceived, onError, onStreamEnd);
-    } catch (error) {
-      console.error("Failed to start stream:", error);
-      const setupErrorMessage: Message = {
-        id: (Date.now() + 3).toString(),
-        role: "assistant",
-        content: "Sorry, I couldn't connect to the AI service.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, setupErrorMessage]);
-      setIsTyping(false);
-    }
-  };
+      localStorage.setItem("cf_animation_enabled", animationEnabled ? "1" : "0");
+      localStorage.setItem("cf_speed", speedSetting);
+    } catch {}
+  }, [animationEnabled, speedSetting]);
 
-  const handleClearConversation = () => {
-    setMessages(initialMessages);
-    setView("chat");
-  };
-
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const saved = localStorage.getItem("cf_theme");
-    if (saved === "dark" || saved === "light") return saved;
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  });
-
+  // Theme effect
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (theme === "dark") {
@@ -200,8 +113,37 @@ const CareerAssistant = () => {
     } catch {}
   }, [theme]);
 
+
+  // --- Helper Functions ---
+
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
+  const handleSelectSession = (id: string | null) => {
+    setSessionId(id);
+  };
+
+  const handleNewSessionStarted = (id: string | null) => {
+    setSessionId(id);
+  };
+
+  const handleHomeClick = () => {
+    setSessionId(null);
+    // Note: This does NOT return to the welcome screen, just starts a new chat.
+    // This is intentional, as the welcome screen is an entry-point.
+  };
+
+  // --- Render Logic ---
+
+  if (!user) {
+    // Still show loading while auth is resolving
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <p className="text-muted-foreground">Loading user session...</p>
+      </div>
+    );
+  }
+
+  // --- Welcome Screen Render (RESTORED) ---
   if (view === "welcome") {
     return (
       <div className={`${styles.welcomeWrapper} flex items-center justify-center p-6`}>
@@ -230,7 +172,7 @@ const CareerAssistant = () => {
             <div className="pt-4">
               <Button
                 size="lg"
-                onClick={() => setView("chat")}
+                onClick={() => setView("chat")} // This button now switches the view
                 className={`${styles.startButton} gap-2`}
                 style={{
                   backgroundColor: "#7dd3fc",
@@ -245,7 +187,12 @@ const CareerAssistant = () => {
 
             <p className="text-sm text-muted-foreground pt-4">Powered by advanced AI technology</p>
             <div className="pt-2">
-              <Button variant="ghost" size="sm" onClick={navigateToDashboard} className="text-sm">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate("/dashboard")} // Use navigate hook
+                className="text-sm"
+              >
                 ← Back to Dashboard
               </Button>
             </div>
@@ -255,90 +202,37 @@ const CareerAssistant = () => {
     );
   }
 
+  // --- Main App Layout Render (now in an 'else' block) ---
   return (
-    <div className={`${styles.chatWrapper} flex h-screen flex-col`}>
-      <header className={`${styles.header} border-b bg-card/50 backdrop-blur-sm`}>
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className={`${styles.headerLogo} flex items-center justify-center`} style={{ background: "transparent" }}>
-              <img src={logoSrc} alt="CareerFlow logo" onError={handleLogoError} className="h-10 w-10 md:h-12 md:w-12 object-contain" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Sancara AI</h1>
-              <p className="text-sm text-muted-foreground">AI-powered career guidance</p>
-            </div>
-          </div>
+    <div className={`${styles.chatWrapper} flex h-screen w-full flex-col bg-background`}>
+      <MainHeader
+        theme={theme}
+        toggleTheme={toggleTheme}
+        animationEnabled={animationEnabled}
+        setAnimationEnabled={setAnimationEnabled}
+        speedSetting={speedSetting}
+        setSpeedSetting={setSpeedSetting}
+        onHomeClick={handleHomeClick}
+      />
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 border rounded-md px-3 py-1 bg-card/60">
-              <Settings className="h-4 w-4 opacity-80" />
-              <label className="text-xs text-muted-foreground mr-2">Animate replies</label>
-              <Button
-                variant={animationEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setAnimationEnabled((s) => !s)}
-                aria-pressed={animationEnabled}
-              >
-                {animationEnabled ? "On" : "Off"}
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2 border rounded-md px-3 py-1 bg-card/50">
-              <label className="text-xs text-muted-foreground">Speed</label>
-              <select
-                value={speedSetting}
-                onChange={(e) => setSpeedSetting(e.target.value as any)}
-                className="speed-select text-sm bg-transparent outline-none"
-              >
-                <option value="fast">Fast</option>
-                <option value="normal">Normal</option>
-                <option value="slow">Slow</option>
-              </select>
-            </div>
-
-            <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} className="gap-2">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={navigateToDashboard} className="gap-2">Dashboard</Button>
-            <Button variant="outline" size="sm" onClick={handleClearConversation} className="gap-2">
-              <RotateCcw className="h-4 w-4" />
-              New Chat
-            </Button>
-          </div>
+      <div className="flex flex-1 overflow-hidden">
+        <div className="h-full hidden md:flex">
+          <HistorySidebar
+            user={user}
+            currentSessionId={sessionId}
+            onSelectSession={handleSelectSession}
+          />
         </div>
-      </header>
 
-      <div className={`${styles.messagesArea} flex-1 overflow-y-auto`}>
-        <div className="container mx-auto max-w-4xl px-6 py-8">
-          {messages.length === 1 && (
-            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <SuggestedPrompts onSelectPrompt={handleSendMessage} />
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {messages.map((message, index) => (
-              <ChatMessage
-                key={message.id}
-                message={message}
-                isLatest={index === messages.length - 1}
-                animationEnabled={animationEnabled}
-                wordDelayMs={wordDelayMs}
-              />
-            ))}
-            {isTyping && <TypingIndicator />}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-      </div>
-
-      <div className={`${styles.footer} border-t bg-card/50 backdrop-blur-sm`}>
-        <div className="container mx-auto max-w-4xl px-6 py-6">
-          <ChatInput onSend={handleSendMessage} disabled={isTyping} />
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Career Assistant can make mistakes. Consider checking important information.
-          </p>
-        </div>
+        <main className="flex-1 overflow-y-auto h-full">
+          <ChatInterface
+            user={user}
+            sessionId={sessionId}
+            onNewSessionStarted={handleNewSessionStarted}
+            animationEnabled={animationEnabled}
+            speedSetting={speedSetting}
+          />
+        </main>
       </div>
     </div>
   );

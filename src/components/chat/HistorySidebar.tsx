@@ -15,7 +15,7 @@ interface Session {
 }
 
 interface HistorySidebarProps {
-  user: User;
+  user?: User | null; // allow optional / null user
   currentSessionId: string | null;
   onSelectSession: (id: string | null) => void;
 }
