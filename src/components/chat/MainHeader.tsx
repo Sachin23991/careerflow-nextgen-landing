@@ -36,8 +36,8 @@ export const MainHeader = ({
   const navigate = useNavigate();
   
   // --- Logo logic (no change) ---
-  const [logoSrc, setLogoSrc] = useState<string>("/logo.png");
-  const logoFallbacks = ["/logo.png", "/logo.svg", "/logo.webp", "/logo"];
+  const [logoSrc, setLogoSrc] = useState<string>("/sancaraailogo.png");
+  const logoFallbacks = ["/sancaraailogo.png", "/logo.svg", "/logo.webp", "/logo"];
   const logoTryIndex = useRef(0);
   const handleLogoError = (e: SyntheticEvent<HTMLImageElement>) => {
     logoTryIndex.current += 1;
