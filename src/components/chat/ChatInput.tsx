@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  teacherMode?: boolean;
 }
 
-export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, disabled = false, teacherMode = false }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -151,27 +152,63 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
   };
 
+  // Add an aria message to announce recording state for screen readers
+  const [liveMessage, setLiveMessage] = useState<string>("");
+
+  // Stop recording helper that ensures cleanup path is used consistently
+  const stopRecording = useCallback(async () => {
+    // If SpeechRecognition is active, stop it
+    if (isSpeechSupported && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      setIsRecording(false);
+      setLiveMessage("Recording stopped");
+      return;
+    }
+
+    // If MediaRecorder is active, stop it
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      try {
+        recorderRef.current.stop();
+      } catch {}
+    } else {
+      cleanupRecorder();
+    }
+    setLiveMessage("Recording stopped");
+  }, [isSpeechSupported]);
+
+  // Add Escape key handler to stop recording as a quick shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent | KeyboardEventInit) => {
+      // Support both React and native event shapes
+      const key = ("key" in e) ? (e as KeyboardEvent).key : (e as any).key;
+      if (key === "Escape" && isRecording) {
+        // Avoid awaiting here; toggleRecording/stopRecording handle state
+        stopRecording();
+      }
+    };
+    window.addEventListener("keydown", onKey as any);
+    return () => window.removeEventListener("keydown", onKey as any);
+  }, [isRecording, stopRecording]);
+
+  // Update live announcer when recording starts/stops
+  useEffect(() => {
+    if (isRecording) {
+      setLiveMessage("Recording started. Click the microphone to stop recording, or press Escape.");
+    } else if (!isRecording && !isTranscribing) {
+      // Clear message shortly after stop so it doesn't linger
+      const id = setTimeout(() => setLiveMessage(""), 2000);
+      return () => clearTimeout(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording]);
+
   // Start/stop recording. Uses SpeechRecognition when available, otherwise MediaRecorder as fallback.
   const toggleRecording = async () => {
     // If currently recording (either method), stop it.
     if (isRecording) {
-      // Stop SpeechRecognition if used
-      if (isSpeechSupported && recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {}
-        setIsRecording(false);
-        return;
-      }
-
-      // Otherwise stop MediaRecorder
-      if (recorderRef.current && recorderRef.current.state !== "inactive") {
-        try {
-          recorderRef.current.stop();
-        } catch {}
-      } else {
-        cleanupRecorder();
-      }
+      await stopRecording();
       return;
     }
 
@@ -183,6 +220,7 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
         recognitionRef.current.start();
         setIsRecording(true);
         setIsTranscribing(false); // live STT; server transcription flag not needed here
+        setLiveMessage("Recording started. Click the microphone to stop recording, or press Escape.");
       } catch (err) {
         console.error("Unable to start SpeechRecognition:", err);
         alert("Speech recognition unavailable. Falling back to audio recording.");
@@ -300,27 +338,48 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
         value={message}
         onChange={handleTextareaChange}
         onKeyDown={handleKeyDown}
-        placeholder={isTranscribing ? "Transcribing..." : "Ask me anything about your career..."}
+        placeholder={
+          isTranscribing
+            ? "Transcribing..."
+            : teacherMode
+            ? "Teacher session active — respond to the prompt or speak your answer..."
+            : "Ask me anything about your career..."
+        }
         disabled={disabled || isTranscribing}
         className="min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-0 py-3 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
         rows={1}
       />
 
-      {/* Voice Button */}
-      <Button
+      {/* Voice Button: pill-style mic that changes theme/text when recording */}
+      <button
         type="button"
-        variant={isRecording ? "destructive" : "ghost"}
-        size="icon"
         onClick={toggleRecording}
         disabled={disabled || isTranscribing}
+        aria-pressed={isRecording}
+        title={isRecording ? "Stop recording (or press Escape)" : isSpeechSupported ? "Record voice (Browser STT)" : "Record voice (AssemblyAI)"}
         className={cn(
-          "shrink-0 transition-colors",
-          isRecording ? "text-destructive hover:text-destructive" : "text-muted-foreground hover:text-foreground"
+          "shrink-0 inline-flex items-center gap-2 select-none transition-all duration-150 focus:outline-none",
+          // recording pill style
+          isRecording
+            ? "rounded-full bg-destructive/90 px-3 py-1 text-white shadow-md hover:bg-destructive/95"
+            : "rounded-full bg-transparent p-0 text-muted-foreground hover:text-foreground"
         )}
-        title={isRecording ? "Stop recording" : isSpeechSupported ? "Record voice (Browser STT)" : "Record voice (AssemblyAI)"}
       >
-        <Mic className={cn("h-5 w-5", isRecording && "animate-pulse")} />
-      </Button>
+        {/* pulsing dot + mic + Stop text to mimic screenshot */}
+        {isRecording ? (
+          <>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" aria-hidden="true" />
+              <Mic className="h-4 w-4" />
+              <span className="text-xs font-medium">Stop</span>
+            </span>
+          </>
+        ) : (
+          <span className="inline-flex items-center justify-center p-2">
+            <Mic className="h-5 w-5" />
+          </span>
+        )}
+      </button>
 
       {/* Send Button */}
       <Button
@@ -332,6 +391,11 @@ export const ChatInput = ({ onSend, disabled = false }: ChatInputProps) => {
       >
         <Send className="h-5 w-5" />
       </Button>
+
+      {/* Live region for screen readers */}
+      <div aria-live="polite" className="sr-only">
+        {liveMessage}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Bot, User, Clipboard } from "lucide-react";
+import { Bot, User, Clipboard, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import "./chat.css";
 import { useEffect, useRef, useState } from "react";
@@ -316,6 +316,9 @@ export const ChatMessage = ({
 
   const [links, setLinks] = useState<LinkItem[]>([]);
 
+  // New: state for copying entire assistant answer
+  const [copiedAnswer, setCopiedAnswer] = useState(false);
+
   useEffect(() => {
     if (message.role !== "assistant") {
       setLinks([]);
@@ -461,6 +464,16 @@ export const ChatMessage = ({
 
   const contentToRender = isAnimating ? typedContent : displayedContent;
 
+  // Copy entire assistant answer (use displayedContent to ensure full text)
+  const handleCopyAnswer = async () => {
+    if (!displayedContent) return;
+    try {
+      await navigator.clipboard.writeText(displayedContent);
+      setCopiedAnswer(true);
+      window.setTimeout(() => setCopiedAnswer(false), 1500);
+    } catch {}
+  };
+
   return (
     <div
       className={cn(
@@ -492,7 +505,8 @@ export const ChatMessage = ({
         <div
           onClick={handleSkipAnimation}
           className={cn(
-            "rounded-2xl px-5 py-3 shadow-sm transition-all hover:shadow-md",
+            // Make this container relative so the copy icon can be positioned inside it
+            "relative rounded-2xl px-5 py-3 shadow-sm transition-all hover:shadow-md",
             isUser
               ? "bg-primary text-primary-foreground rounded-br-sm"
               : "bg-card border rounded-bl-sm",
@@ -504,6 +518,26 @@ export const ChatMessage = ({
               {contentToRender}
             </ReactMarkdown>
           </div>
+
+          {/* Icon-only copy button (top-right) - assistant messages only, shown when fully revealed */}
+          {!isUser && !isAnimating && displayedContent && (
+            <button
+              onClick={handleCopyAnswer}
+              aria-label="Copy full answer"
+              title={copiedAnswer ? "Copied!" : "Copy answer"}
+              className={cn(
+                "absolute top-2 right-2 z-10 h-8 w-8 flex items-center justify-center rounded-full transition shadow-sm",
+                // Light / dark theme friendly background + border + icon color
+                "bg-white/90 text-slate-800 border border-slate-200 hover:bg-white dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 hover:dark:bg-slate-600"
+              )}
+            >
+              {copiedAnswer ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Clipboard className="h-4 w-4" />
+              )}
+            </button>
+          )}
 
           {!isUser && links.length > 0 && !isAnimating && (
             <div className="mt-3 flex flex-col gap-2">

@@ -1,11 +1,12 @@
+
 // src/components/chat/HistorySidebar.tsx (Updated)
 
 import { db } from '../../firebase';
-import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare } from 'lucide-react';
+import { PlusCircle, MessageSquare, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface Session {
@@ -49,6 +50,22 @@ export const HistorySidebar = ({ user, currentSessionId, onSelectSession }: Hist
     return () => unsubscribe();
   }, [user]);
 
+  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    
+    if (window.confirm("Are you sure you want to delete this chat history?")) {
+      try {
+        await deleteDoc(doc(db, 'users', user.uid, 'sessions', sessionId));
+        if (currentSessionId === sessionId) {
+          onSelectSession(null);
+        }
+      } catch (error) {
+        console.error("Error deleting session:", error);
+      }
+    }
+  };
+
   return (
     <div className="flex h-full w-full max-w-xs flex-col border-r bg-card p-4">
       
@@ -56,32 +73,51 @@ export const HistorySidebar = ({ user, currentSessionId, onSelectSession }: Hist
 
       <Button
         variant="outline"
-        className="w-full justify-start gap-2"
+        className="w-full justify-start gap-2 mb-6"
         onClick={() => onSelectSession(null)} // Select "null" to start a new chat
       >
         <PlusCircle className="h-4 w-4" />
         New Chat
       </Button>
 
-      <h2 className="mt-6 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         History
       </h2>
       <div className="flex-1 space-y-2 overflow-y-auto pr-2">
         {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
         {sessions.map(session => (
-          <Button
+          <div 
             key={session.id}
-            variant={currentSessionId === session.id ? 'secondary' : 'ghost'}
             className={cn(
-              "w-full justify-start gap-3 truncate",
-              currentSessionId === session.id && "font-semibold"
+              "group flex items-center w-full rounded-md border border-transparent transition-colors hover:bg-accent/50",
+              currentSessionId === session.id ? "bg-accent text-accent-foreground" : ""
             )}
-            onClick={() => onSelectSession(session.id)}
           >
-            <MessageSquare className="h-4 w-4 shrink-0" />
-            <span className="truncate">{session.title}</span>
-          </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                "flex-1 justify-start gap-3 truncate bg-transparent hover:bg-transparent h-auto py-2 px-3",
+                currentSessionId === session.id && "font-semibold"
+              )}
+              onClick={() => onSelectSession(session.id)}
+            >
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span className="truncate text-left">{session.title}</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mr-1 text-muted-foreground hover:text-destructive"
+              onClick={(e) => handleDeleteSession(e, session.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         ))}
+        {!loading && sessions.length === 0 && (
+          <p className="text-sm text-muted-foreground italic px-2">No history yet.</p>
+        )}
       </div>
     </div>
   );
