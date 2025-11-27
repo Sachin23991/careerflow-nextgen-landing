@@ -64,6 +64,10 @@ export const ChatInterface = ({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
 
+  // New: editing state for user-message edit flow
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingInitialText, setEditingInitialText] = useState<string>("");
+
   // teacher mode UI flags are now derived from hook
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
 
@@ -238,7 +242,15 @@ Speaking Session Rules:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- (Keep the 'handleSendMessage' logic - it is unchanged) ---
+  // Edit handler invoked by ChatMessage when Edit is clicked
+  const handleEditMessage = (msg: Message) => {
+    setEditingMessageId(msg.id);
+    setEditingInitialText(msg.content || "");
+    // scroll + focus handled by ChatInput effect when initialValue changes
+    scrollToBottom();
+  };
+
+  // Update handleSendMessage to clear edit state after sending (always)
   const handleSendMessage = async (content: string) => {
     // stop any currently speaking before handling new user input
     stopSpeaking();
@@ -374,6 +386,10 @@ Speaking Session Rules:
         // replace non-existent startRecognition with start and supply empty string
         setTimeout(() => teacher.start('', handleSendMessage), 300);
       }
+    } finally {
+      // Clear editing state after attempting to send (successful or error)
+      setEditingMessageId(null);
+      setEditingInitialText("");
     }
   };
 
@@ -400,6 +416,7 @@ Speaking Session Rules:
                 // Pass the props down
                 animationEnabled={animationEnabled}
                 wordDelayMs={wordDelayMs}
+                onEdit={handleEditMessage} // pass edit callback
               />
             ))}
             {isTyping && <TypingIndicator />}
@@ -429,7 +446,14 @@ Speaking Session Rules:
               </button>
 
               <div className="flex-1">
-                <ChatInput onSend={handleSendMessage} disabled={isTyping} />
+                {/* Pass initialValue/isEditing for edit flow */}
+                <ChatInput
+                  onSend={handleSendMessage}
+                  disabled={isTyping}
+                  teacherMode={false}
+                  initialValue={editingInitialText}
+                  isEditing={!!editingMessageId}
+                />
               </div>
             </div>
           ) : (

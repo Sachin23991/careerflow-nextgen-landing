@@ -9,9 +9,11 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   teacherMode?: boolean;
+  initialValue?: string; // new: prefill input for edits
+  isEditing?: boolean;   // optional flag to change placeholder
 }
 
-export const ChatInput = ({ onSend, disabled = false, teacherMode = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, disabled = false, teacherMode = false, initialValue, isEditing = false }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -319,6 +321,19 @@ export const ChatInput = ({ onSend, disabled = false, teacherMode = false }: Cha
     }
   };
 
+  // When initialValue changes (e.g., user clicked Edit), populate and focus the textarea
+  useEffect(() => {
+    if (initialValue !== undefined && initialValue !== null) {
+      setMessage(initialValue);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        // focus after a tiny delay to ensure DOM ready
+        setTimeout(() => textareaRef.current?.focus(), 20);
+      }
+    }
+  }, [initialValue]);
+
   return (
     <div className="relative flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm transition-all focus-within:shadow-md focus-within:ring-2 focus-within:ring-primary/20">
       {/* Attachment Button */}
@@ -343,6 +358,8 @@ export const ChatInput = ({ onSend, disabled = false, teacherMode = false }: Cha
             ? "Transcribing..."
             : teacherMode
             ? "Teacher session active — respond to the prompt or speak your answer..."
+            : isEditing
+            ? "Edit your message and press Enter to resend..."
             : "Ask me anything about your career..."
         }
         disabled={disabled || isTranscribing}
