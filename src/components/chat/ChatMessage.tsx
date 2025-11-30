@@ -331,7 +331,7 @@ const createMarkdownComponents = () => ({
 });
 
 // ============================================
-// WORD-BY-WORD ANIMATION HOOK
+// WORD-BY-WORD (now CHARACTER) ANIMATION HOOK
 // ============================================
 const useAnimatedText = (
   text: string,
@@ -349,26 +349,50 @@ const useAnimatedText = (
       return;
     }
 
-    setDisplayedText("");
-    setIsAnimating(true);
+    if (!text || typeof text !== "string") {
+      setDisplayedText("");
+      setIsAnimating(false);
+      return;
+    }
 
-    const words = text.split(" ");
-    let currentIndex = 0;
+    // Character-by-character animation to avoid dropping words/whitespace.
+    const total = text.length;
+    if (total === 0) {
+      setDisplayedText("");
+      setIsAnimating(false);
+      return;
+    }
+
+    // Show first character immediately to avoid initial empty render,
+    // then append remaining characters on the configured interval.
+    setDisplayedText(text.charAt(0));
+    setIsAnimating(total > 1);
+
+    let index = 1;
 
     const animate = () => {
-      if (currentIndex < words.length) {
-        setDisplayedText((prev) => (prev ? prev + " " + words[currentIndex] : words[currentIndex]));
-        currentIndex++;
+      if (index < total) {
+        setDisplayedText((prev) => prev + text.charAt(index));
+        index++;
         animationRef.current = setTimeout(animate, wordDelayMs);
       } else {
         setIsAnimating(false);
+        animationRef.current = null;
       }
     };
 
-    animationRef.current = setTimeout(animate, wordDelayMs);
+    if (index < total) {
+      animationRef.current = setTimeout(animate, wordDelayMs);
+    } else {
+      // single-character message; finish immediately
+      setIsAnimating(false);
+    }
 
     return () => {
-      if (animationRef.current) clearTimeout(animationRef.current);
+      if (animationRef.current) {
+        clearTimeout(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, [text, enabled, wordDelayMs]);
 
@@ -441,21 +465,19 @@ export const ChatMessage = ({
 
   const isUser = message.role === "user";
 
-  // Normalize incoming markdown so pipes/newlines are real characters (not escaped sequences)
+  // Preserve the original content but run a minimal normalization step so Markdown tables
+  // and escaped pipes are rendered correctly (unescape sequences, unwrap fenced code
+  // that contains tables). Do NOT animate or alter the text.
   const rawContent = message.content;
   const mdContent = useMemo(() => normalizeMarkdown(rawContent), [rawContent]);
 
-  // Use normalized content for response type detection
+  // Use normalized content for response type detection.
   const responseType = useMemo(() => detectResponseType(mdContent), [mdContent]);
 
-  // Animation for assistant messages
-  // Disable animation for content that likely contains tables, code blocks or explicit newlines
-  const hasTableOrCodeOrNewline =
-    mdContent.includes("|") || mdContent.includes("```") || mdContent.includes("\n");
-  const shouldAnimate = !isUser && isLatest && animationEnabled && !hasTableOrCodeOrNewline;
+  // Disable animation so nothing is altered during render.
+  const shouldAnimate = false;
   const { displayedText, isAnimating } = useAnimatedText(mdContent, shouldAnimate, wordDelayMs);
-
-  const content = shouldAnimate ? displayedText : mdContent;
+  const content = mdContent;
 
   // Memoize markdown components
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
@@ -531,19 +553,20 @@ export const ChatMessage = ({
               "shadow-sm hover:shadow-md transition-shadow duration-200"
             )}
           >
+            {/* Render normalized Markdown so tables and GFM features render correctly. */}
             <ReactMarkdown remarkPlugins={remarkPlugins} components={markdownComponents}>
               {content}
             </ReactMarkdown>
 
-            {/* Typing Indicator */}
-            {isAnimating && (
-              <span className="inline-flex items-center gap-1 ml-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </span>
-            )}
-          </div>
+             {/* Typing Indicator */}
+             {isAnimating && (
+               <span className="inline-flex items-center gap-1 ml-1">
+                 <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                 <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                 <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+               </span>
+             )}
+           </div>
 
           {/* Action Buttons */}
           <div
