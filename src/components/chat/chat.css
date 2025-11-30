@@ -1,174 +1,470 @@
-/* Basic fade & slide animations used across chat components */
-@keyframes cf-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* ============================================
+   SANCARA AI - PREMIUM CHAT STYLES
+   ============================================ */
+
+/* --- CSS Variables --- */
+:root {
+  --code-bg: #0f172a;
+  --code-fg: #e2e8f0;
+  --foreground-900: #0f172a;
+  --muted-foreground: #64748b;
+  --card: #ffffff;
+  --violet-glow: rgba(139, 92, 246, 0.15);
+  --blue-glow: rgba(59, 130, 246, 0.15);
 }
-@keyframes cf-slide-up-small {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+
+html.dark {
+  --code-bg: #0f172a;
+  --code-fg: #e2e8f0;
+  --foreground-900: #f1f5f9;
+  --muted-foreground: #94a3b8;
+  --card: #1e293b;
+  --violet-glow: rgba(139, 92, 246, 0.2);
+  --blue-glow: rgba(59, 130, 246, 0.2);
 }
 
-/* Utility animation classes (kept small and predictable) */
-.animate-in { animation-fill-mode: both; }
-.fade-in { animation-name: cf-fade-in; animation-duration: 280ms; animation-timing-function: ease-out; }
-.slide-in-from-bottom-2 { animation-name: cf-slide-up-small; animation-duration: 320ms; animation-timing-function: cubic-bezier(.22,.9,.36,1); }
-.duration-300 { animation-duration: 300ms !important; }
-
-/* Subtle glow shadows used for accent / primary tiles */
-.shadow-glow-accent { box-shadow: 0 10px 30px rgba(139,92,246,0.12); }
-.shadow-glow-primary { box-shadow: 0 10px 30px rgba(59,130,246,0.10); }
-
-/* Typing dots */
-@keyframes cf-typing-bounce {
-  0% { transform: translateY(0); opacity: 0.6; }
-  40% { transform: translateY(-6px); opacity: 1; }
-  80% { transform: translateY(0); opacity: 0.6; }
-  100% { transform: translateY(0); opacity: 0.6; }
+/* --- Animations --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.typing-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  animation-name: cf-typing-bounce;
-  animation-duration: 900ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-  margin-right: 6px;
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
-.typing-dot.delay-1 { animation-delay: -300ms; }
-.typing-dot.delay-2 { animation-delay: -150ms; }
-.typing-dot.delay-3 { animation-delay: 0ms; }
 
-/* Small chat utilities */
-.chat-card { border-radius: 12px; }
-.chat-avatar-border { border-width: 2px; }
-
-/* Make sure any image logos inside chat tiles fit */
-.chat-img-fit { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-/* Small hover/tap effect for interactive prompt cards */
-.card-interactive {
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-  will-change: transform;
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
-.card-interactive:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(2,6,23,0.08); }
 
-/* Code block styling for chat messages */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes typing-bounce {
+  0% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-8px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.5; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* --- Typography --- */
+.rich-text {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+}
+
+.rich-text h1,
+.rich-text h2,
+.rich-text h3 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--foreground-900);
+}
+
+.rich-text h1 {
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text h2 {
+  font-size: 1.25rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text h3 {
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+.rich-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Lists --- */
+.rich-text ul,
+.rich-text ol {
+  margin-bottom: 1rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.rich-text li {
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+}
+
+/* --- Blockquotes (Insight Cards) --- */
+.rich-text blockquote {
+  margin: 1.5rem 0;
+  padding: 0;
+}
+
+/* --- Code Blocks --- */
 .code-block {
-  margin-top: 0.5rem;
-  border-radius: 0.5rem;
+  margin: 1rem 0;
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--code-bg, #0b1220);
-  color: var(--code-fg, #e6eef6);
-  position: relative;
-  border: 1px solid rgba(2,6,23,0.06);
+  background: var(--code-bg);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Header (language + copy) */
 .code-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.35rem 0.5rem;
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.02);
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.8);
-}
-.code-lang {
-  font-weight: 600;
-  opacity: 0.9;
-  text-transform: lowercase;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Copy button */
+.code-lang {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
 .code-copy-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
   background: transparent;
   border: none;
-  color: inherit;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.35rem;
-  transition: background-color 120ms ease;
-}
-.code-copy-btn:hover {
-  background: rgba(255,255,255,0.02);
-}
-.code-copy-btn .code-copy-text {
+  color: #94a3b8;
   font-size: 0.75rem;
-  opacity: 0.95;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Code area */
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
 .code-pre {
   margin: 0;
-  padding: 0.75rem;
-  overflow: auto;
-  max-height: 420px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  color: inherit;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--code-fg);
+}
+
+/* Inline Code */
+.inline-code {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
+html.dark .inline-code {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+/* --- Tables --- */
+.rich-text table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.rich-text thead {
+  background: rgba(139, 92, 246, 0.05);
+}
+
+html.dark .rich-text thead {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.rich-text th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--foreground-900);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.rich-text td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  color: var(--muted-foreground);
+}
+
+.rich-text tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- Typing Indicator --- */
+.typing-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0ms; }
+.typing-dot:nth-child(2) { animation-delay: 150ms; }
+.typing-dot:nth-child(3) { animation-delay: 300ms; }
+
+/* --- Scrollbar --- */
+.dark-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Inline code */
-.inline-code {
-  background: rgba(2,6,23,0.06);
-  padding: 0.12rem 0.3rem;
-  border-radius: 0.25rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-  font-size: 0.9em;
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
 }
 
-/* Speed select: make sure text is visible in both themes */
-/* Use multiple vendor properties and explicit fill-color for webkit to maximize compatibility */
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* --- Quick Response Card --- */
+.quick-response {
+  font-size: 1rem;
+}
+
+/* --- Card Hover Effects --- */
+.card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(139, 92, 246, 0.15);
+}
+
+/* --- Gradient Text --- */
+.gradient-text {
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* --- Glow Effects --- */
+.glow-violet {
+  box-shadow: 0 0 20px var(--violet-glow);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px var(--blue-glow);
+}
+
+/* --- Speed Select (unchanged for compatibility) --- */
 .speed-select {
-  color: var(--foreground-900, #0b1220);
+  color: var(--foreground-900);
   background: transparent;
   border: none;
   padding: 0 0.25rem;
   appearance: none;
   -webkit-appearance: none;
-  -moz-appearance: none;
-  text-shadow: none;
-  -webkit-text-fill-color: var(--foreground-900, #0b1220);
+  -webkit-text-fill-color: var(--foreground-900);
 }
 
-/* Remove default arrow on some browsers and use our own visual spacing */
-.speed-select::-ms-expand { display: none; }
-.speed-select:focus { outline: none; box-shadow: none; }
+.speed-select:focus {
+  outline: none;
+}
 
-/* Best-effort option styling: some browsers/platforms ignore option styling; this helps most Chromium-based browsers */
 .speed-select option {
-  background-color: var(--card, #0b1220) !important;
-  color: var(--foreground-900, #e6eef6) !important;
-  -webkit-text-fill-color: var(--foreground-900, #e6eef6) !important;
+  background-color: var(--card) !important;
+  color: var(--foreground-900) !important;
 }
 
-/* Light / Dark overrides and sensible defaults */
-:root {
-  --code-bg: #0b1220;
-  --code-fg: #e6eef6;
-  --foreground-900: #0b1220;
-  --muted-foreground: rgba(11,18,32,0.8);
-  --card: #ffffff;
+/* --- Message Container Spacing --- */
+.message-container {
+  padding: 1.5rem 0;
 }
-html.dark {
-  --code-bg: #0b1220;
-  --code-fg: #e6eef6;
-  --foreground-900: #e6eef6;
-  --muted-foreground: rgba(255,255,255,0.85);
-  --card: #0b1220;
+
+/* --- Smooth Transitions --- */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
-html:not(.dark) {
-  --code-bg: #f6f8fa;
-  --code-fg: #0b1220;
-  --foreground-900: #0b1220;
-  --muted-foreground: rgba(11,18,32,0.8);
-  --card: #ffffff;
+
+/* Premium Glassmorphism Effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+html.dark .glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth Message Entrance */
+.message-enter {
+  animation: messageSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Premium Input Field */
+.premium-input {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.premium-input::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-input:focus-within::before {
+  opacity: 1;
+}
+
+html.dark .premium-input {
+  background: linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.9) 100%);
+}
+
+/* AI Avatar Pulse */
+.ai-avatar {
+  position: relative;
+}
+
+.ai-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  opacity: 0.3;
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.15); opacity: 0.1; }
+}
+
+/* Typing Indicator Premium */
+.typing-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.1));
+  border-radius: 20px;
+  border: 1px solid rgba(139,92,246,0.2);
+}
+
+/* Smooth Scrollbar */
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6 0%, #3b82f6 100%);
+  border-radius: 3px;
+}
+
+/* Welcome Cards Hover Effect */
+.welcome-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.welcome-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.2);
+}
+
+/* Response Type Badge */
+.response-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.15));
+  color: #8b5cf6;
+  border: 1px solid rgba(139,92,246,0.3);
 }

@@ -1,6 +1,6 @@
 // src/components/chat/MainHeader.tsx (Updated)
 
-import { useState, useRef, SyntheticEvent } from 'react';
+import { useState, useRef, SyntheticEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 // --- Import Download icon ---
@@ -28,17 +28,26 @@ export const MainHeader = ({
   setAnimationEnabled,
   speedSetting,
   setSpeedSetting,
-  onHomeClick,
+  onHomeClick: _onHomeClick,
   // --- Destructure new props ---
   onDownloadPdf,
   isDownloadingPdf = false,
 }: MainHeaderProps) => {
   const navigate = useNavigate();
   
-  // --- Logo logic (no change) ---
-  const [logoSrc, setLogoSrc] = useState<string>("/sancaraailogo.png");
-  const logoFallbacks = ["/sancaraailogo.png", "/logo.svg", "/logo.webp", "/logo"];
+  // --- Logo logic (updated to respect theme) ---
+  const initialLogo = theme === "dark" ? "/sancaraailogo.png" : "/sancaraailogo1.png";
+  const [logoSrc, setLogoSrc] = useState<string>(initialLogo);
+  const logoFallbacks = [
+    // try theme-specific first, then the other variant, then generic assets
+    theme === "dark" ? "/sancaraailogo.png" : "/sancaraailogo1.png",
+    theme === "dark" ? "/sancaraailogo1.png" : "/sancaraailogo.png",
+    "/logo.svg",
+    "/logo.webp",
+    "/logo"
+  ];
   const logoTryIndex = useRef(0);
+
   const handleLogoError = (e: SyntheticEvent<HTMLImageElement>) => {
     logoTryIndex.current += 1;
     if (logoTryIndex.current < logoFallbacks.length) {
@@ -47,6 +56,12 @@ export const MainHeader = ({
       (e.target as HTMLImageElement).style.display = "none";
     }
   };
+
+  // when theme changes, reset try index and update logoSrc to the correct theme variant
+  useEffect(() => {
+    logoTryIndex.current = 0;
+    setLogoSrc(theme === "dark" ? "/sancaraailogo.png" : "/sancaraailogo1.png");
+  }, [theme]);
 
   return (
     <header className={`${styles.header} border-b bg-card/50 backdrop-blur-sm z-10`}>

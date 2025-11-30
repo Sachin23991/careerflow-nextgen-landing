@@ -395,9 +395,29 @@ Speaking Session Rules:
 
   // UI rendering
   return (
-    <div className={`${styles.chatWrapper} flex flex-col h-full`}>
+    // add dark-scrollbar class here
+    <div className={`${styles.chatWrapper} flex flex-col h-full dark-scrollbar`}>
+     {/* Scoped scrollbar styles to improve dark-mode appearance */}
+     <style>{`
+       /* dark-scrollbar: thin, low-contrast thumbs for dark UI */
+       .dark-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+       .dark-scrollbar::-webkit-scrollbar { width: 12px; height: 12px; }
+       .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
+       .dark-scrollbar::-webkit-scrollbar-thumb {
+         background-color: rgba(255,255,255,0.06);
+         border-radius: 9999px;
+         border: 3px solid transparent;
+         background-clip: padding-box;
+       }
+       .dark-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.14); }
+       @media (prefers-color-scheme: dark) {
+         .dark-scrollbar { scrollbar-color: rgba(255,255,255,0.14) transparent; }
+         .dark-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.08); }
+       }
+     `}</style>
+
       {/* messages area */}
-      <div className={`${styles.messagesArea} flex-1 overflow-y-auto`}>
+      <div className={`${styles.messagesArea} flex-1 overflow-y-auto dark-scrollbar`}>
         <div className="container mx-auto max-w-4xl px-6 py-8">
           
           {/* Show suggested prompts ONLY if it's the initial message */}
@@ -426,7 +446,7 @@ Speaking Session Rules:
       </div>
 
       {/* Footer area: when teacherMode active we hide typed input and show overlay */}
-      <div className={`${styles.footer} border-t bg-card/50 backdrop-blur-sm relative`}>
+      <div className={`${styles.footer} border-t bg-card/50 backdrop-blur-sm dark:bg-zinc-900/70 dark:border-zinc-700 relative`}>
         <div className="container mx-auto max-w-4xl px-6 py-6">
           {!teacherMode ? (
             <div className="flex items-center gap-4">
@@ -439,7 +459,7 @@ Speaking Session Rules:
                 aria-pressed={teacherMode}
                 className={cn(
                   "rounded-md px-3 py-1 text-sm font-medium transition",
-                  teacherMode ? "bg-destructive/90 text-white" : "bg-transparent border"
+                  teacherMode ? "bg-destructive/90 text-white" : "bg-transparent border dark:border-zinc-700 dark:text-zinc-100"
                 )}
               >
                 {teacherMode ? "Teacher mode: ON" : "Start Teacher Mode"}
@@ -460,19 +480,20 @@ Speaking Session Rules:
             // Teacher mode overlay: use teacher.listening / teacher.speaking
             <div className="relative h-40 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {/* glowing radial light */}
+                {/* glowing radial light - softened for dark */}
                 <div className={cn(
                   "rounded-full transition-all",
                   teacher.listening ? "animate-pulse-slow" : teacher.speaking ? "animate-pulse-fast" : "opacity-50"
                 )} style={{
                   width: 210,
                   height: 210,
-                  boxShadow: teacher.listening ? "0 0 40px rgba(255,69,58,0.45)" : teacher.speaking ? "0 0 32px rgba(59,130,246,0.35)" : "0 0 16px rgba(0,0,0,0.06)",
+                  boxShadow: teacher.listening ? "0 0 48px rgba(255,69,58,0.35)" : teacher.speaking ? "0 0 40px rgba(59,130,246,0.22)" : "0 0 18px rgba(0,0,0,0.06)",
                   borderRadius: "9999px",
+                  background: teacher.listening ? "radial-gradient(circle, rgba(255,69,58,0.12), transparent 40%)" : teacher.speaking ? "radial-gradient(circle, rgba(59,130,246,0.08), transparent 40%)" : "transparent"
                 }} />
               </div>
 
-              <div className="z-10 flex flex-col items-center gap-3">
+              <div className="z-10 flex flex-col items-center gap-3 text-zinc-900 dark:text-zinc-100">
                 {/* ...logo + status... */}
 
                 <div className="flex gap-3">
@@ -484,7 +505,7 @@ Speaking Session Rules:
                         teacher.start('', handleSendMessage);
                       }
                     }}
-                    className="rounded-md px-3 py-1 border text-sm"
+                    className="rounded-md px-3 py-1 border text-sm dark:border-zinc-700 dark:text-zinc-100"
                   >
                     Restart Listening
                   </button>
@@ -495,7 +516,7 @@ Speaking Session Rules:
                       onClick={() => {
                         try { teacher.stopSpeaking(); } catch { /* ignore */ }
                       }}
-                      className="rounded-md px-3 py-1 border text-sm"
+                      className="rounded-md px-3 py-1 border text-sm dark:border-zinc-700 dark:text-zinc-100"
                     >
                       Stop Speaking
                     </button>

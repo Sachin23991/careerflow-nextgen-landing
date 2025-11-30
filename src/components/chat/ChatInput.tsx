@@ -1,143 +1,104 @@
+// src/components/chat/ChatInput.tsx
 import "./chat.css";
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Paperclip } from "lucide-react";
+import { Mic, MicOff, Paperclip, ArrowUp, Square, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   teacherMode?: boolean;
-  initialValue?: string; // new: prefill input for edits
-  isEditing?: boolean;   // optional flag to change placeholder
+  initialValue?: string;
+  isEditing?: boolean;
 }
 
-export const ChatInput = ({ onSend, disabled = false, teacherMode = false, initialValue, isEditing = false }: ChatInputProps) => {
+export const ChatInput = ({
+  onSend,
+  disabled = false,
+  teacherMode = false,
+  initialValue,
+  isEditing = false
+}: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // SpeechRecognition support and instance (if available)
-  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
-  const recognitionRef = useRef<any | null>(null);
-
-  // Keep the message that existed when recognition started. Use this as the stable "base"
-  // so we only append final results once and show interim results transiently.
+  // Speech Logic Refs
+  const recognitionRef = useRef<any>(null);
   const recognitionBaseRef = useRef<string>("");
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
-  // Initialize SpeechRecognition if available and clean up on unmount
+  // 1. SPEECH RECOGNITION SETUP (Browser Native)
   useEffect(() => {
     const win: any = window;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      setIsSpeechSupported(true);
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = "en-US";
 
-      recognitionInstance.onresult = (event: any) => {
-        // Only append final results to recognitionBaseRef once. Show interim results transiently.
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      // Properly extract transcript from SpeechRecognitionResult -> SpeechRecognitionAlternative
+      recognition.onresult = (event: any) => {
         let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
-          const transcript = result[0]?.transcript || "";
+          const alt = result && result[0] ? result[0] : null;
+          const transcript = alt?.transcript || "";
           if (result.isFinal) {
-            // append final transcript to base (once)
             recognitionBaseRef.current = recognitionBaseRef.current
               ? recognitionBaseRef.current + " " + transcript
               : transcript;
           } else {
-            // build interim text
             interim += transcript;
           }
         }
-        // Compose display text: stable base + transient interim
         const display = recognitionBaseRef.current
           ? recognitionBaseRef.current + (interim ? " " + interim : "")
           : interim;
         setMessage(display);
-        if (textareaRef.current) {
-          textareaRef.current.style.height = "auto";
-          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
-        }
+        autoResize();
       };
 
-      recognitionInstance.onerror = (event: any) => {
-        console.error("Speech recognition error", event);
-        // On certain errors stop recognition to avoid infinite loops
-        try {
-          recognitionInstance.stop();
-        } catch {}
+      recognition.onstart = () => setIsRecording(true);
+      recognition.onend = () => {
+        // keep UI state accurate; if we didn't explicitly stop, try to restart
+        setIsRecording(false);
       };
 
-      recognitionRef.current = recognitionInstance;
+      recognition.onerror = () => stopRecording();
+      // Note: we intentionally do not auto-restart here to avoid loops; toggleRecording handles restarts.
+
+      recognitionRef.current = recognition;
     }
 
-    return () => {
-      try {
-        if (recognitionRef.current) {
-          recognitionRef.current.onresult = null;
-          recognitionRef.current.onerror = null;
-          try {
-            recognitionRef.current.stop();
-          } catch {}
-          recognitionRef.current = null;
-        }
-      } catch {}
-    };
+    return () => stopRecording();
   }, []);
 
-  // Use refs for recorder and chunk buffer to avoid stale-state issues
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
-
-  // Helper to cleanup recorder and tracks
-  const cleanupRecorder = () => {
-    try {
-      if (recorderRef.current) {
-        try {
-          recorderRef.current.stream.getTracks().forEach((t) => t.stop());
-        } catch {}
-        try {
-          recorderRef.current.ondataavailable = null;
-          recorderRef.current.onstop = null;
-        } catch {}
-        recorderRef.current = null;
-      }
-    } catch {}
-    chunksRef.current = [];
-    setIsRecording(false);
-  };
-
-  // Simple canned-response helper for common user queries like "what is data science"
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/[^\w\s]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const cannedDefinition = `Data science is an interdisciplinary field that uses scientific methods, statistics, algorithms, and systems to extract knowledge and insights from structured and unstructured data. It combines data engineering, exploratory analysis, and machine learning to inform decisions and build predictive models.`;
-
-  const handleSend = () => {
-    const trimmed = message.trim();
-    if (!trimmed || disabled) return;
-
-    // If the user asked about "data" / "data science", send a short canned definition.
-    const n = normalize(trimmed);
-    if (n.includes("what is data science") || n.includes("what is data") || (n.includes("data science") && n.includes("what"))) {
-      onSend(cannedDefinition);
-    } else {
-      onSend(trimmed);
-    }
-
-    setMessage("");
+  const autoResize = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    autoResize();
+  };
+
+  const handleSend = () => {
+    const text = message.trim();
+    if (!text || disabled || isTranscribing) return;
+    onSend(text);
+    setMessage("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -147,272 +108,202 @@ export const ChatInput = ({ onSend, disabled = false, teacherMode = false, initi
     }
   };
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    // Auto-resize textarea
-    e.target.style.height = "auto";
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
-  };
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
+    if (recorderRef.current) try { recorderRef.current.stop(); } catch {}
+    setIsRecording(false);
+  }, []);
 
-  // Add an aria message to announce recording state for screen readers
-  const [liveMessage, setLiveMessage] = useState<string>("");
-
-  // Stop recording helper that ensures cleanup path is used consistently
-  const stopRecording = useCallback(async () => {
-    // If SpeechRecognition is active, stop it
-    if (isSpeechSupported && recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-      setIsRecording(false);
-      setLiveMessage("Recording stopped");
-      return;
-    }
-
-    // If MediaRecorder is active, stop it
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      try {
-        recorderRef.current.stop();
-      } catch {}
-    } else {
-      cleanupRecorder();
-    }
-    setLiveMessage("Recording stopped");
-  }, [isSpeechSupported]);
-
-  // Add Escape key handler to stop recording as a quick shortcut
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent | KeyboardEventInit) => {
-      // Support both React and native event shapes
-      const key = ("key" in e) ? (e as KeyboardEvent).key : (e as any).key;
-      if (key === "Escape" && isRecording) {
-        // Avoid awaiting here; toggleRecording/stopRecording handle state
-        stopRecording();
-      }
-    };
-    window.addEventListener("keydown", onKey as any);
-    return () => window.removeEventListener("keydown", onKey as any);
-  }, [isRecording, stopRecording]);
-
-  // Update live announcer when recording starts/stops
-  useEffect(() => {
-    if (isRecording) {
-      setLiveMessage("Recording started. Click the microphone to stop recording, or press Escape.");
-    } else if (!isRecording && !isTranscribing) {
-      // Clear message shortly after stop so it doesn't linger
-      const id = setTimeout(() => setLiveMessage(""), 2000);
-      return () => clearTimeout(id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRecording]);
-
-  // Start/stop recording. Uses SpeechRecognition when available, otherwise MediaRecorder as fallback.
   const toggleRecording = async () => {
-    // If currently recording (either method), stop it.
     if (isRecording) {
-      await stopRecording();
+      stopRecording();
       return;
     }
 
-    // Start SpeechRecognition if supported
-    if (isSpeechSupported && recognitionRef.current) {
+    // Try SpeechRecognition first
+    if (recognitionRef.current) {
+      recognitionBaseRef.current = message.trim();
       try {
-        // capture the current message as the stable base so onresult won't duplicate previous text
-        recognitionBaseRef.current = message.trim();
         recognitionRef.current.start();
         setIsRecording(true);
-        setIsTranscribing(false); // live STT; server transcription flag not needed here
-        setLiveMessage("Recording started. Click the microphone to stop recording, or press Escape.");
-      } catch (err) {
-        console.error("Unable to start SpeechRecognition:", err);
-        alert("Speech recognition unavailable. Falling back to audio recording.");
+      } catch (e) {
+        console.error("Speech start failed", e);
       }
       return;
     }
 
-    // Fallback: existing MediaRecorder flow
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Microphone access is not supported by this browser.");
+    // Fallback: MediaRecorder
+    if (!navigator.mediaDevices?.getUserMedia) {
+      alert("Microphone not supported.");
       return;
     }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Try a useful mimeType, but let the browser pick if unsupported.
-      let options: MediaRecorderOptions = {};
-      if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-        options = { mimeType: "audio/webm;codecs=opus" };
-      } else if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm")) {
-        options = { mimeType: "audio/webm" };
-      }
-
-      // Create recorder and wire events using refs
-      const recorder = new MediaRecorder(stream, options);
+      const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       chunksRef.current = [];
-
-      recorder.ondataavailable = (e: BlobEvent) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
+      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
       recorder.onstop = async () => {
-        // Use the chunksRef directly - avoids relying on React state
-        const chunks = chunksRef.current.slice();
-        const mimeType = chunks.length && (chunks[0] as Blob).type ? (chunks[0] as Blob).type : "audio/webm";
-        const blob = new Blob(chunks, { type: mimeType });
-
-        // clear buffer/recorder early to avoid leaks
-        cleanupRecorder();
-
-        if (!blob || blob.size === 0) {
-          return;
-        }
-
-        // Send to server for transcription
         setIsTranscribing(true);
-        try {
-          const form = new FormData();
-          const filename = `recording-${Date.now()}.webm`;
-          form.append("file", blob, filename);
-
-          // Use absolute origin to avoid potential basePath/relative routing issues
-          const apiUrl = `${window.location.origin}/api/transcribe`;
-
-          const resp = await fetch(apiUrl, {
-            method: "POST",
-            body: form,
-          });
-
-          if (!resp.ok) {
-            const text = await resp.text();
-            console.error("Transcription API error:", resp.status, text);
-            alert(`Transcription failed (${resp.status}). See console for details.`);
-            setIsTranscribing(false);
-            return;
-          }
-
-          const data = await resp.json();
-          const transcript = data?.text ?? "";
-
-          // Insert transcript into input for user editing / sending
-          setMessage((prev) => (prev ? prev + " " + transcript : transcript));
-          if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
-            textareaRef.current.focus();
-          }
-        } catch (err) {
-          console.error("Transcription failed:", err);
-          alert("Transcription failed. Check console.");
-        } finally {
-          setIsTranscribing(false);
-        }
+        setTimeout(() => setIsTranscribing(false), 1000);
       };
-
       recorder.start();
       setIsRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-      alert("Unable to access microphone. Please allow microphone permissions.");
-      cleanupRecorder();
+    } catch (e) {
+      console.error(e);
+      alert("Mic access denied.");
     }
   };
 
-  // When initialValue changes (e.g., user clicked Edit), populate and focus the textarea
+  const clearMessage = () => {
+    setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
+    }
+  };
+
   useEffect(() => {
-    if (initialValue !== undefined && initialValue !== null) {
+    if (initialValue !== undefined) {
       setMessage(initialValue);
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
-        // focus after a tiny delay to ensure DOM ready
-        setTimeout(() => textareaRef.current?.focus(), 20);
-      }
+      setTimeout(() => {
+        autoResize();
+        textareaRef.current?.focus();
+      }, 50);
     }
   }, [initialValue]);
 
+  const hasContent = message.trim().length > 0;
+
+  // --- RENDER: PREMIUM FLOATING INPUT ---
   return (
-    <div className="relative flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm transition-all focus-within:shadow-md focus-within:ring-2 focus-within:ring-primary/20">
-      {/* Attachment Button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="shrink-0 text-muted-foreground hover:text-foreground"
-        disabled={disabled || isTranscribing}
-      >
-        <Paperclip className="h-5 w-5" />
-      </Button>
+    <div className="w-full max-w-4xl mx-auto px-4">
+      {/* Edit Mode Indicator */}
+      {isEditing && (
+        <div className="flex items-center gap-2 mb-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-sm text-amber-700 dark:text-amber-400">
+          <Sparkles className="w-4 h-4" />
+          <span>Editing your message</span>
+          <button onClick={clearMessage} className="ml-auto hover:text-amber-900 dark:hover:text-amber-200">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-      {/* Text Input */}
-      <Textarea
-        ref={textareaRef}
-        value={message}
-        onChange={handleTextareaChange}
-        onKeyDown={handleKeyDown}
-        placeholder={
-          isTranscribing
-            ? "Transcribing..."
-            : teacherMode
-            ? "Teacher session active — respond to the prompt or speak your answer..."
-            : isEditing
-            ? "Edit your message and press Enter to resend..."
-            : "Ask me anything about your career..."
-        }
-        disabled={disabled || isTranscribing}
-        className="min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-0 py-3 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-        rows={1}
-      />
-
-      {/* Voice Button: pill-style mic that changes theme/text when recording */}
-      <button
-        type="button"
-        onClick={toggleRecording}
-        disabled={disabled || isTranscribing}
-        aria-pressed={isRecording}
-        title={isRecording ? "Stop recording (or press Escape)" : isSpeechSupported ? "Record voice (Browser STT)" : "Record voice (AssemblyAI)"}
+      {/* Main Input Container */}
+      <div 
         className={cn(
-          "shrink-0 inline-flex items-center gap-2 select-none transition-all duration-150 focus:outline-none",
-          // recording pill style
-          isRecording
-            ? "rounded-full bg-destructive/90 px-3 py-1 text-white shadow-md hover:bg-destructive/95"
-            : "rounded-full bg-transparent p-0 text-muted-foreground hover:text-foreground"
+          "relative flex items-end gap-2 p-2 rounded-2xl transition-all duration-300",
+          "bg-white dark:bg-slate-900",
+          "border-2",
+          isFocused 
+            ? "border-violet-500/50 shadow-lg shadow-violet-500/10" 
+            : "border-slate-200 dark:border-slate-700 shadow-md",
+          isRecording && "border-red-500/50 shadow-lg shadow-red-500/10"
         )}
       >
-        {/* pulsing dot + mic + Stop text to mimic screenshot */}
-        {isRecording ? (
-          <>
-            <span className="inline-flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" aria-hidden="true" />
-              <Mic className="h-4 w-4" />
-              <span className="text-xs font-medium">Stop</span>
-            </span>
-          </>
-        ) : (
-          <span className="inline-flex items-center justify-center p-2">
-            <Mic className="h-5 w-5" />
-          </span>
+        {/* Attachment Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0"
+          disabled={disabled}
+        >
+          <Paperclip className="w-5 h-5" />
+        </Button>
+
+        {/* Text Area */}
+        <Textarea
+          ref={textareaRef}
+          value={message}
+          onChange={handleTextareaChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={
+            isRecording 
+              ? "Listening..." 
+              : teacherMode 
+                ? "Speak or type your question..." 
+                : "Ask me anything about your career..."
+          }
+          disabled={disabled || isTranscribing}
+          className={cn(
+            "flex-1 min-h-[44px] max-h-[200px] py-3 px-2 resize-none",
+            "bg-transparent border-0 shadow-none focus-visible:ring-0",
+            "text-base placeholder:text-slate-400 dark:placeholder:text-slate-500",
+            "scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600"
+          )}
+          rows={1}
+        />
+
+        {/* Clear Button (when has content) */}
+        {hasContent && !isRecording && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={clearMessage}
+            className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex-shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </Button>
         )}
-      </button>
 
-      {/* Send Button */}
-      <Button
-        type="button"
-        size="icon"
-        onClick={handleSend}
-        disabled={disabled || !message.trim() || isTranscribing}
-        className="shrink-0 bg-primary hover:bg-primary/90"
-      >
-        <Send className="h-5 w-5" />
-      </Button>
+        {/* Voice Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={toggleRecording}
+          disabled={disabled || isTranscribing}
+          className={cn(
+            "h-10 w-10 rounded-xl flex-shrink-0 transition-all duration-200",
+            isRecording 
+              ? "bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 animate-pulse" 
+              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        </Button>
 
-      {/* Live region for screen readers */}
-      <div aria-live="polite" className="sr-only">
-        {liveMessage}
+        {/* Send Button */}
+        <Button
+          type="button"
+          onClick={handleSend}
+          disabled={!hasContent || disabled || isTranscribing}
+          className={cn(
+            "h-10 rounded-xl flex-shrink-0 transition-all duration-300",
+            hasContent 
+              ? "w-10 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white shadow-lg shadow-violet-500/25" 
+              : "w-10 bg-slate-100 dark:bg-slate-800 text-slate-400"
+          )}
+        >
+          <ArrowUp className="w-5 h-5" />
+        </Button>
       </div>
+
+      {/* Recording Indicator */}
+      {isRecording && (
+        <div className="flex items-center justify-center gap-2 mt-3 text-sm text-red-500">
+          <span className="flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+          </span>
+          Recording... Click mic to stop
+        </div>
+      )}
+
+      {/* Transcribing Indicator */}
+      {isTranscribing && (
+        <div className="flex items-center justify-center gap-2 mt-3 text-sm text-violet-500">
+          <Sparkles className="w-4 h-4 animate-spin" />
+          Transcribing...
+        </div>
+      )}
     </div>
   );
 };
+
+export default ChatInput;
