@@ -1,10 +1,10 @@
 // src/components/chat/ChatInput.tsx
 import "./chat.css";
-import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, Paperclip, ArrowUp, Square, Sparkles, X } from "lucide-react";
+import { Mic, MicOff, Paperclip, ArrowUp, Sparkles, X } from "lucide-react"; // removed unused Square
 import { cn } from "@/lib/utils";
+import React, { useEffect, useState, useRef, useCallback } from "react"; // import default React for types, removed useMemo
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -30,6 +30,8 @@ export const ChatInput = ({
   // Speech Logic Refs
   const recognitionRef = useRef<any>(null);
   const recognitionBaseRef = useRef<string>("");
+  // When true, try to restart SpeechRecognition automatically if it ends.
+  const shouldRestartRecognitionRef = useRef<boolean>(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -67,12 +69,33 @@ export const ChatInput = ({
       };
 
       recognition.onstart = () => setIsRecording(true);
+
       recognition.onend = () => {
-        // keep UI state accurate; if we didn't explicitly stop, try to restart
+        // update UI state
+        setIsRecording(false);
+        // If user intends to keep recording, try to restart (works around platform short stops)
+        if (shouldRestartRecognitionRef.current) {
+          // small delay before restarting to avoid tight restart loops
+          setTimeout(() => {
+            try {
+              recognition.start();
+            } catch (err) {
+              // ignore start errors (e.g., if permission revoked)
+            }
+          }, 200);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        // If permission denied or service not allowed, do not attempt to restart.
+        const err = event?.error;
+        if (err === "not-allowed" || err === "service-not-allowed") {
+          shouldRestartRecognitionRef.current = false;
+        }
+        // reflect in UI; onend will run and respect shouldRestart flag
         setIsRecording(false);
       };
 
-      recognition.onerror = () => stopRecording();
       // Note: we intentionally do not auto-restart here to avoid loops; toggleRecording handles restarts.
 
       recognitionRef.current = recognition;
@@ -101,7 +124,7 @@ export const ChatInput = ({
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -109,6 +132,8 @@ export const ChatInput = ({
   };
 
   const stopRecording = useCallback(() => {
+    // If user explicitly stops, prevent auto-restart
+    shouldRestartRecognitionRef.current = false;
     if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
     if (recorderRef.current) try { recorderRef.current.stop(); } catch {}
     setIsRecording(false);
@@ -122,11 +147,15 @@ export const ChatInput = ({
 
     // Try SpeechRecognition first
     if (recognitionRef.current) {
+      // Indicate the user started recording and we should attempt to restart if the API stops briefly
+      shouldRestartRecognitionRef.current = true;
       recognitionBaseRef.current = message.trim();
       try {
         recognitionRef.current.start();
         setIsRecording(true);
       } catch (e) {
+        // If start fails, ensure we don't keep shouldRestart set
+        shouldRestartRecognitionRef.current = false;
         console.error("Speech start failed", e);
       }
       return;

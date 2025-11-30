@@ -37,7 +37,7 @@ const AppContent = () => {
               path="/career-assistant" 
               element={
                 <AuthWrapper>
-                  {(user) => <CareerAssistant user={user} />}
+                  {() => <CareerAssistant />}
                 </AuthWrapper>
               } 
             />
@@ -59,7 +59,8 @@ const AppContent = () => {
     );
 };
 
-const App = () => (
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
         <TooltipProvider>
             <Toaster />
@@ -71,6 +72,5 @@ const App = () => (
             </ResumeProvider>
         </TooltipProvider>
     </QueryClientProvider>
-);
-
-export default App;
+  );
+}
