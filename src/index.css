@@ -113,21 +113,53 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Allow Unicorn background on landing page */
+body.unicorn-active {
+  background-color: transparent !important;
+  background: transparent !important;
 }
 
-/* Define custom utilities inside a Tailwind layer so @apply can use them */
-@layer utilities {
-  /* minimal utility expected by your project */
-  .border-border {
-    border-color: var(--border);
-  }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom tokens (you may already have similar vars) */
+:root{
+  --bg-900: 7 5% 4%;
+  --glass-bg: rgba(12,12,14,0.45);
+}
+
+/* Reusable panels */
+.glass-panel {
+  background: rgba(12, 14, 18, 0.44);
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 60px rgba(2,6,23,0.6);
+}
+
+.glass-hero-card {
+  background: linear-gradient(180deg, rgba(10,12,20,0.5), rgba(6,8,14,0.6));
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 30px 90px rgba(12,20,40,0.6);
+}
+
+/* feature card */
+.feature-card {
+  background: linear-gradient(180deg, rgba(8,10,14,0.42), rgba(6,8,12,0.50));
+  border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 10px 30px rgba(3,7,18,0.6);
+}
+
+/* insight pills already defined by GalaxyEngine (insight-pill) */
+
+/* small helpers */
+.section-kicker { @apply text-xs font-semibold uppercase tracking-widest text-sky-300; }
+.section-title { @apply text-2xl md:text-3xl font-semibold text-white; }
+
+/* responsive safety */
+@media (max-width: 900px) {
+  .glass-hero-card { display: none; } /* hide heavy previews on small screens if you want */
 }

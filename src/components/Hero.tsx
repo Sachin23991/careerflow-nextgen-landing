@@ -3,7 +3,7 @@ import { ArrowRight, Play, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "@/assets/hero-career-flow.jpg";
+import heroImage from "@/assets/hero-career-flow.png";
 
 const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
 
@@ -135,15 +135,27 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
+            {/* Overlay: use a dark translucent background in dark mode to avoid bright flashing */}
             <motion.div 
-              className="absolute inset-0 bg-gradient-primary opacity-20 blur-3xl rounded-full"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="hero-image-overlay rounded-2xl"
+              style={{
+                background: theme === "dark" ? "rgba(6,8,11,0.56)" : undefined,
+                boxShadow: theme === "dark" ? "0 20px 40px rgba(0,0,0,0.6)" : undefined,
+                transition: "background 240ms ease, box-shadow 240ms ease"
+              }}
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             />
+
+            {/* Image: apply a subtle filter in dark mode with a smooth transition to prevent a flash */}
             <motion.img 
               src={heroImage} 
               alt="Career Growth Journey" 
               className="relative rounded-2xl shadow-2xl w-full h-auto"
+              style={{
+                filter: theme === "dark" ? "brightness(0.62) contrast(0.95) saturate(0.9)" : "none",
+                transition: "filter 220ms linear, transform 220ms linear"
+              }}
               whileHover={{ scale: 1.02, rotateY: 5 }}
               transition={{ duration: 0.3 }}
             />

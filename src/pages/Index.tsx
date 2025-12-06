@@ -5,6 +5,7 @@ import HowItWorks from "@/components/HowItWorks";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
+
 const Index = () => {
   return (
     <div className="min-h-screen">
@@ -14,6 +15,7 @@ const Index = () => {
       <HowItWorks />
       <CTA />
       <Footer />
+      
     </div>
   );
 };
