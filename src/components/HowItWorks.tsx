@@ -6,6 +6,10 @@ import discoverConnect from "@/assets/discover-connect.png"; // <-- existing imp
 import learnGrow from "@/assets/learn-grow.png"; // <-- added import
 import achieveSucess from "@/assets/achieve-sucess.png"; // <-- added import (match asset name)
 
+// Add lazy + Suspense to reuse the full-page 3D background here
+import { lazy, Suspense } from "react";
+const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
+
 const steps = [
 	{
 		number: "01",
@@ -59,6 +63,11 @@ const HowItWorks = () => {
 			id="how-it-works"
 			className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden"
 		>
+			{/* Render shared 3D background (fixed & negative z in the component) */}
+			<Suspense fallback={null}>
+				<Hero3DScene />
+			</Suspense>
+
 			{/* Background Decoration */}
 			<div className="absolute inset-0 opacity-20">
 				<div className="absolute top-20 right-10 w-96 h-96 bg-secondary/30 rounded-full blur-3xl"></div>

@@ -254,9 +254,10 @@ const Career3DScene: React.FC<Career3DSceneProps> = ({ theme = 'light' }) => {
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
 
   return (
-    // Added a slight radial gradient background for better depth
-    <div className={`absolute inset-0 z-0 ${theme === 'light' ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-50 to-gray-200' : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 to-black'}`}>
-      <Canvas dpr={[1, 2]}>
+    // Make the 3D scene fixed to the viewport so it runs behind the entire landing page while scrolling.
+    // Use a negative z-index so texts and UI are rendered above the scene.
+    <div className={`fixed inset-0 -z-10 pointer-events-none ${theme === 'light' ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-50 to-gray-200' : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 to-black'}`}>
+      <Canvas dpr={[1, 2]} className="w-screen h-screen" style={{ width: '100%', height: '100%', pointerEvents: 'none' }}>
         <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={45} />
         
         <ambientLight intensity={theme === 'light' ? 0.7 : 0.4} />
@@ -294,5 +295,5 @@ const Career3DScene: React.FC<Career3DSceneProps> = ({ theme = 'light' }) => {
     </div>
   );
 };
-
-export default Career3DScene;
+ 
+ export default Career3DScene;
