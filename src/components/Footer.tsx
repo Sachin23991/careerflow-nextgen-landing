@@ -1,5 +1,4 @@
 import { Github, Twitter, Linkedin, Mail } from "lucide-react";
-import './navbar.css'; // add shared logo CSS
 
 const Footer = () => {
   const footerLinks = {

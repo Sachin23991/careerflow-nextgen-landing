@@ -16,26 +16,11 @@ export default function FeatureCard({
   description,
   background,
 }: FeatureCardProps) {
-  // ensure public/bg paths are used correctly:
-  const bgUrl =
-    typeof background === "string"
-      ? background.startsWith("/") || background.startsWith("http")
-        ? background
-        : `/${background}`
-      : "";
+  // background SVG removed — no bgUrl computation
 
   return (
     <Card className="relative overflow-hidden bg-white rounded-2xl shadow-md border border-gray-100 p-8 text-center group transition-all duration-300 hover:shadow-lg">
-      {/* Background Line Art */}
-      <div
-        className="absolute inset-0 opacity-[0.08] group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{
-          backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundSize: "80%",
-        }}
-      />
+      {/* background artwork removed */}
 
       <CardContent className="relative z-10 flex flex-col items-center gap-4">
         {/* Icon */}
@@ -48,6 +33,31 @@ export default function FeatureCard({
 
         {/* Description */}
         <p className="text-gray-500 leading-relaxed max-w-xs">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// New named export: StatCard
+export function StatCard({
+  value,
+  label,
+  icon: Icon,
+}: {
+  value: string | number;
+  label: string;
+  icon?: LucideIcon;
+}) {
+  return (
+    <Card className="p-4 rounded-lg shadow-sm border border-gray-100">
+      <CardContent className="flex flex-col items-center gap-2">
+        {Icon ? (
+          <div className="w-10 h-10 flex items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Icon className="w-5 h-5" />
+          </div>
+        ) : null}
+        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-sm text-muted-foreground">{label}</div>
       </CardContent>
     </Card>
   );

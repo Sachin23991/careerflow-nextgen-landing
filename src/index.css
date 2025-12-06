@@ -113,15 +113,12 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
+
 /* Allow Unicorn background on landing page */
 body.unicorn-active {
   background-color: transparent !important;
   background: transparent !important;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Custom tokens (you may already have similar vars) */
 :root{

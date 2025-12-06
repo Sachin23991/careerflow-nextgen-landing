@@ -13,6 +13,36 @@ import ResumeBuilder from "./pages/ResumeBuilder";
 import ResumeBuilderHome from "./pages/resumebuilderhome";
 import { ResumeProvider } from "@/lib/resume-context";
 import { AuthWrapper } from "./components/AuthWrapper"; // Import the wrapper
+import React from "react";
+
+// Minimal ErrorBoundary to avoid blank screens on render errors
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: undefined };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    // eslint-disable-next-line no-console
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto", color: "#fff", background: "#111", minHeight: "100vh" }}>
+          <h2 style={{ marginTop: 0 }}>Something went wrong</h2>
+          <pre style={{ whiteSpace: "pre-wrap", color: "#ffdede", background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 6 }}>
+            {String(this.state.error)}
+          </pre>
+          <p style={{ opacity: 0.9 }}>Check browser console for stack trace.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const queryClient = new QueryClient();
 
@@ -67,7 +97,9 @@ export default function App() {
             <Sonner />
             <ResumeProvider>
               <BrowserRouter>
-                  <AppContent /> 
+                  <ErrorBoundary>
+                    <AppContent /> 
+                  </ErrorBoundary>
               </BrowserRouter>
             </ResumeProvider>
         </TooltipProvider>

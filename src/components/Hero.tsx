@@ -49,7 +49,13 @@ const Hero = () => {
   return (
     <section className={`relative flex items-start justify-center overflow-hidden bg-gradient-hero pt-6`}>
       {/* 3D Scene Background */}
-      <Suspense fallback={null}>
+      <Suspense fallback={
+        <div className="absolute inset-0 flex items-center justify-center z-0">
+          <div style={{ padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 8 }}>
+            Loading scene...
+          </div>
+        </div>
+      }>
         <Hero3DScene />
       </Suspense>
       
