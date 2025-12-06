@@ -114,7 +114,7 @@ const Hero = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-border">
+            <div className="grid grid-cols-3 gap-8 pt-8">
               {[
                 { value: "10", label: "Active Users", color: "text-primary" },
                 { value: "5", label: "Mentors", color: "text-secondary" },
