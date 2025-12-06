@@ -42,6 +42,18 @@ const steps = [
 ];
 
 const HowItWorks = () => {
+	// Map logical color keys to explicit Tailwind classes so JIT/purge includes them
+	const gradientFromClass: Record<string, string> = {
+		primary: "from-primary",
+		secondary: "from-secondary",
+		accent: "from-accent",
+	};
+	const textColorClass: Record<string, string> = {
+		primary: "text-primary",
+		secondary: "text-secondary",
+		accent: "text-accent",
+	};
+
 	return (
 		<section
 			id="how-it-works"
@@ -86,7 +98,7 @@ const HowItWorks = () => {
 										>
 											{/* Step Number */}
 											<motion.div
-												className={`flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-${step.color} to-accent flex items-center justify-center text-2xl font-bold text-white shadow-lg`}
+												className={`flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br ${gradientFromClass[step.color] ?? 'from-primary'} to-accent flex items-center justify-center text-2xl font-bold text-white shadow-lg`}
 												whileHover={{ rotate: 360, scale: 1.05 }}
 												transition={{ duration: 0.6 }}
 											>
@@ -110,7 +122,7 @@ const HowItWorks = () => {
 												transition={{ delay: 0.5, duration: 0.3 }}
 											>
 												<CheckCircle
-													className={`flex-shrink-0 w-6 h-6 text-${step.color} opacity-50 group-hover:opacity-100 transition-opacity`}
+													className={`${textColorClass[step.color]} flex-shrink-0 w-6 h-6 opacity-50 group-hover:opacity-100 transition-opacity`}
 												/>
 											</motion.div>
 										</motion.div>
