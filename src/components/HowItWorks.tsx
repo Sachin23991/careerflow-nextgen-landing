@@ -2,7 +2,9 @@ import { CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import profileCreation from "@/assets/profile-creation.png"; // <-- existing import
-import discoverConnect from "@/assets/discover-connect.png"; // <-- added import
+import discoverConnect from "@/assets/discover-connect.png"; // <-- existing import
+import learnGrow from "@/assets/learn-grow.png"; // <-- added import
+import achieveSucess from "@/assets/achieve-sucess.png"; // <-- added import (match asset name)
 
 const steps = [
 	{
@@ -27,6 +29,7 @@ const steps = [
 		description:
 			"Take assessments, build your resume, and access learning resources. Track your progress in real-time.",
 		color: "accent",
+		image: learnGrow, // <-- attach image to step 03
 	},
 	{
 		number: "04",
@@ -34,6 +37,7 @@ const steps = [
 		description:
 			"Land your dream job, secure funding, or become a mentor yourself. Celebrate your milestones along the way.",
 		color: "primary",
+		image: achieveSucess, // <-- attach image to step 04
 	},
 ];
 
