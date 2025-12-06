@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, FileText, Search, Award, BookOpen, GraduationCap, Users, TrendingUp, Clock, Target } from 'lucide-react';
-import FeatureCard, { StatCard } from './FeatureCard';
+import FeatureCard, { StatCard } from '../components/FeatureCard';
 import Sidebar from './Sidebar';
 import DashboardHeader from './DashboardHeader';
 

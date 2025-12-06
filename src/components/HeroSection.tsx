@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles, FileText, Palette } from "lucide-react";
-import heroImage from "/resumepicture.png";
+
+// Use public asset path (public/resumepicture.png)
+const heroImage = "/resumepicture.png";
 
 export function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
