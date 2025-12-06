@@ -86,7 +86,7 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-24 px-4 bg-gradient-to-b from-background to-muted/30"
+      className="py-24 px-4 bg-transparent"
     >
       <div className="container mx-auto">
         {/* Section Header */}

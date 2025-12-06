@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Sun, Moon } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { motion } from "framer-motion";
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-career-flow.png";
 
@@ -10,41 +10,6 @@ const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
 const Hero = () => {
   const navigate = useNavigate();
   const handleStartJourney = () => navigate("/login");
-
-  // Added: theme state persisted to localStorage and applied to document.documentElement
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    return (localStorage.getItem("landing-theme") as "light" | "dark") || "light";
-  });
-
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      document.documentElement.setAttribute("data-landing-theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.setAttribute("data-landing-theme", "light");
-    }
-    localStorage.setItem("landing-theme", theme);
-
-    // Added: make top navbar links readable in dark mode
-    const navLinkTexts = ["Features", "How It Works", "About", "Contact"];
-    const selector = "nav a, header a, .nav-link, .navbar a";
-    const els = Array.from(document.querySelectorAll<HTMLElement>(selector));
-    els.forEach((el) => {
-      const text = (el.textContent || "").trim();
-      if (navLinkTexts.includes(text)) {
-        if (theme === "dark") {
-          el.classList.add("text-white");
-        } else {
-          el.classList.remove("text-white");
-        }
-      }
-    });
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"));
 
   return (
     <section className={`relative flex items-start justify-center overflow-hidden bg-gradient-hero pt-6`}>
@@ -141,27 +106,18 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            {/* Overlay: use a dark translucent background in dark mode to avoid bright flashing */}
+            {/* Overlay animation */}
             <motion.div 
               className="hero-image-overlay rounded-2xl"
-              style={{
-                background: theme === "dark" ? "rgba(6,8,11,0.56)" : undefined,
-                boxShadow: theme === "dark" ? "0 20px 40px rgba(0,0,0,0.6)" : undefined,
-                transition: "background 240ms ease, box-shadow 240ms ease"
-              }}
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Image: apply a subtle filter in dark mode with a smooth transition to prevent a flash */}
+            {/* Image */}
             <motion.img 
               src={heroImage} 
               alt="Career Growth Journey" 
               className="relative rounded-2xl shadow-2xl w-full h-auto"
-              style={{
-                filter: theme === "dark" ? "brightness(0.62) contrast(0.95) saturate(0.9)" : "none",
-                transition: "filter 220ms linear, transform 220ms linear"
-              }}
               whileHover={{ scale: 1.02, rotateY: 5 }}
               transition={{ duration: 0.3 }}
             />
@@ -175,19 +131,6 @@ const Hero = () => {
           <div className="w-1 h-3 bg-foreground/40 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
-
-      {/* Theme Toggle - fixed right-bottom for landing page */}
-      <button
-        aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-        onClick={toggleTheme}
-        className="fixed right-6 bottom-6 z-50 p-3 rounded-full bg-white/90 dark:bg-foreground/10 shadow-lg border border-border/20 backdrop-blur-sm flex items-center justify-center"
-      >
-        {theme === "dark" ? (
-          <Sun className="w-5 h-5 text-yellow-400" />
-        ) : (
-          <Moon className="w-5 h-5 text-gray-700" />
-        )}
-      </button>
     </section>
   );
 };
