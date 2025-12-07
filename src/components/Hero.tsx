@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-career-flow.png";
+import heroRight from "@/assets/hero-right.png";
 
 const Hero3DScene = lazy(() => import("@/components/Hero3DScene"));
 
@@ -99,12 +100,12 @@ const Hero = () => {
             </div>
           </motion.div>
 
-          {/* Right Image */}
+          {/* Right Illustration */}
           <motion.div 
-            className="relative"
-            initial={{ opacity: 0, scale: 0.9 }}
+            className="relative flex justify-center items-center"
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
             {/* Overlay animation */}
             <motion.div 
@@ -113,13 +114,17 @@ const Hero = () => {
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Image */}
-            <motion.img 
-              src={heroImage} 
-              alt="Career Growth Journey" 
-              className="relative rounded-2xl shadow-2xl w-full h-auto"
-              whileHover={{ scale: 1.02, rotateY: 5 }}
-              transition={{ duration: 0.3 }}
+            <img
+              src={heroRight}
+              alt="Career Guidance Illustration"
+              className="
+                w-full 
+                max-w-[520px] 
+                object-contain 
+                select-none 
+                pointer-events-none
+                drop-shadow-[0_40px_80px_rgba(0,0,0,0.35)]
+              "
             />
           </motion.div>
         </div>
