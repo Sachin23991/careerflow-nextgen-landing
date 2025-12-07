@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { 
   Float, 
@@ -252,6 +252,24 @@ interface Career3DSceneProps {
 
 const Career3DScene: React.FC<Career3DSceneProps> = ({ theme = 'light' }) => {
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // On mobile, skip the heavy canvas and render a lightweight decorative background.
+  if (isMobile) {
+    return (
+      <div
+        className={`fixed inset-0 -z-10 pointer-events-none ${theme === 'light' ? 'bg-[radial-gradient(ellipse_at_center,_#f8fafc,_#e6eef8)]' : 'bg-[radial-gradient(ellipse_at_center,_#0b1020,_#000000)]'}`}
+        aria-hidden
+      />
+    );
+  }
 
   return (
     // Make the 3D scene fixed to the viewport so it runs behind the entire landing page while scrolling.
@@ -296,4 +314,4 @@ const Career3DScene: React.FC<Career3DSceneProps> = ({ theme = 'light' }) => {
   );
 };
  
- export default Career3DScene;
+export default Career3DScene;

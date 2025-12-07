@@ -35,7 +35,7 @@ const Navbar = () => {
       }}
     >
       {/* Use grid container: left (logo), center (links), right (CTAs + mobile button) */}
-      <div className="container mx-auto px-4 navbar__container">
+      <div className="container mx-auto px-4 navbar__container flex-wrap">
         {/* left */}
         <div className="navbar__left">
           <motion.div
@@ -49,7 +49,7 @@ const Navbar = () => {
               className="w-8 h-8 rounded-lg object-contain navbar__logo-icon"
               initial={{ rotate: 0 }}
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+              transition={{ repeat: Infinity, duration: 12, ease: "linear" }} // slower rotation for battery
               whileHover={{ scale: 1.05 }}
             />
             <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent navbar__brand">
@@ -116,7 +116,7 @@ const Navbar = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="md:hidden pb-4 space-y-4 mobile-menu container mx-auto px-4"
+            className="md:hidden pb-4 space-y-4 mobile-menu w-full px-4"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}

@@ -33,7 +33,7 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-4 py-12 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <motion.div 
             className="space-y-8"
@@ -80,7 +80,7 @@ const Hero = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 sm:pt-8">
               {[
                 { value: "10", label: "Active Users", color: "text-primary" },
                 { value: "5", label: "Mentors", color: "text-secondary" },
@@ -107,28 +107,29 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            {/* Overlay animation */}
-            <motion.div 
-              className="hero-image-overlay rounded-2xl"
-              animate={{ scale: [1, 1.03, 1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            />
+             {/* Overlay animation */}
+             <motion.div 
+               className="hero-image-overlay rounded-2xl"
+               animate={{ scale: [1, 1.03, 1] }}
+               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+             />
 
             <img
               src={heroRight}
               alt="Career Guidance Illustration"
+              loading="lazy"
               className="
                 w-full 
-                max-w-[520px] 
+                max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[520px]
                 object-contain 
                 select-none 
                 pointer-events-none
-                drop-shadow-[0_40px_80px_rgba(0,0,0,0.35)]
+                drop-shadow-[0_24px_48px_rgba(0,0,0,0.25)]
               "
             />
-          </motion.div>
-        </div>
-      </div>
+           </motion.div>
+         </div>
+       </div>
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">

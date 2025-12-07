@@ -93,12 +93,12 @@ const HowItWorks = () => {
 				</AnimatedSection>
 
 				{/* Steps */}
-				<div className="max-w-4xl mx-auto space-y-8">
+				<div className="max-w-5xl mx-auto space-y-8 px-2 sm:px-0">
 					{steps.map((step, index) => (
 						<AnimatedSection key={index} delay={index * 0.15}>
 							<motion.div whileHover={{ x: 6 }} transition={{ duration: 0.25 }}>
 								{/* Two-column layout: text (left) + image (right) on md+, stacked on small screens */}
-								<div className="grid gap-6 items-center md:grid-cols-2">
+								<div className="grid gap-6 items-center grid-cols-1 md:grid-cols-2">
 									{/* Text/Card column (left) */}
 									<div className="group relative w-full">
 										<motion.div
@@ -143,7 +143,8 @@ const HowItWorks = () => {
 											<img
 												src={step.image}
 												alt={`${step.title} illustration`}
-												className="w-full max-w-md md:w-72 h-auto object-cover rounded-md shadow-sm"
+												loading="lazy"
+												className="w-full max-w-xs sm:max-w-sm md:max-w-[288px] h-auto object-contain rounded-md shadow-sm"
 												style={{ transition: "transform 220ms ease" }}
 											/>
 										</div>

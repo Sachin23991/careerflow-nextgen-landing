@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <footer className="bg-muted/30 border-t border-border">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-8">
           {/* Brand */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center space-x-2">
@@ -28,7 +28,7 @@ const Footer = () => {
             <p className="text-muted-foreground max-w-xs">
               Empowering careers through AI-driven guidance, mentorship, and opportunity discovery.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               <a href="#" className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center hover:bg-accent transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
