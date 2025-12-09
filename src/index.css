@@ -160,3 +160,18 @@ body.unicorn-active {
 @media (max-width: 900px) {
   .glass-hero-card { display: none; } /* hide heavy previews on small screens if you want */
 }
+.hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.65),
+    rgba(255,255,255,0.85)
+  );
+}
+
+.dark .hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.55),
+    rgba(0,0,0,0.75)
+  );
+}
