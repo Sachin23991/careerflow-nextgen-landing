@@ -86,7 +86,7 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-24 px-4 bg-transparent"
+      className="py-24 px-4 bg-transparent font-bold"
     >
       <div className="container mx-auto">
         {/* Section Header */}
@@ -102,7 +102,7 @@ export default function Features() {
             </span>
           </h2>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-semibold">
             All the tools and resources you need to accelerate your career growth
             in one powerful platform.
           </p>

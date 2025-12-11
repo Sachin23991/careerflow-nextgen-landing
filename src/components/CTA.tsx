@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 const CTA = () => {
   const navigate = useNavigate();
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
+    <section className="py-24 px-4 relative overflow-hidden font-bold">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
         <div className="absolute inset-0 opacity-30">
@@ -35,7 +35,7 @@ const CTA = () => {
           </h2>
 
           {/* Description */}
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-bold">
             Join thousands of professionals who are already accelerating their careers with CareerFlow. 
             Start your journey today — it's completely free to get started.
           </p>

@@ -6,7 +6,7 @@
   min-height: var(--navbar-height);
   position: sticky;
   top: 0;
-  background: hsl(var(--background) / 0.86);
+  background: transparent; /* allow 3D background to be visible */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid hsl(var(--border));
@@ -94,6 +94,7 @@
   background-size: 200% 100%;
   background-position: 0% 50%;
   font-size: 0.95rem; /* slightly smaller text to save space */
+  font-weight: 600; /* make nav text bold/semi-bold for readability */
 }
 
 /* ensure links become white when the site is in "dark" mode (html.dark) */

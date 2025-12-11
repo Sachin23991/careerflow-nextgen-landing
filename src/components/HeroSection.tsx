@@ -6,8 +6,8 @@ const heroImage = "/resumepicture.png";
 
 export function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
-    <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
+    <div className="relative min-h-[600px] flex items-center justify-center overflow-hidden bg-transparent font-bold">
+      <div className="absolute inset-0 bg-transparent" />
       
       <div className="container relative z-10 px-4 py-12 md:py-20">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -19,10 +19,10 @@ export function HeroSection({ onGetStarted }: { onGetStarted: () => void }) {
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               Create Your Perfect Resume in{" "}
-              <span className="text-primary">Minutes</span>
+              <span className="text-primary font-bold">Minutes</span>
             </h1>
             
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-lg text-muted-foreground leading-relaxed font-bold">
               Build professional, ATS-friendly resumes tailored for the Indian job market. 
               Get AI-powered suggestions for impactful content, choose from multiple templates, 
               and customize every detail.

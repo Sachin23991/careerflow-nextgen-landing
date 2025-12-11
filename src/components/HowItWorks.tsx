@@ -61,17 +61,17 @@ const HowItWorks = () => {
 	return (
 		<section
 			id="how-it-works"
-			className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden"
+			className="py-24 px-4 bg-transparent relative overflow-hidden font-bold"
 		>
 			{/* Render shared 3D background (fixed & negative z in the component) */}
 			<Suspense fallback={null}>
 				<Hero3DScene />
 			</Suspense>
 
-			{/* Background Decoration */}
+			{/* Background Decoration (now transparent to allow 3D to show through) */}
 			<div className="absolute inset-0 opacity-20">
-				<div className="absolute top-20 right-10 w-96 h-96 bg-secondary/30 rounded-full blur-3xl"></div>
-				<div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/30 rounded-full blur-3xl"></div>
+				<div className="absolute top-20 right-10 w-96 h-96 bg-transparent rounded-full blur-3xl"></div>
+				<div className="absolute bottom-20 left-10 w-96 h-96 bg-transparent rounded-full blur-3xl"></div>
 			</div>
 
 			<div className="container mx-auto relative z-10">
@@ -87,7 +87,7 @@ const HowItWorks = () => {
 						</span>
 						Works
 					</h2>
-					<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+					<p className="text-xl text-muted-foreground max-w-2xl mx-auto font-semibold">
 						Four simple steps to transform your career journey
 					</p>
 				</AnimatedSection>
@@ -119,7 +119,7 @@ const HowItWorks = () => {
 												<h3 className="text-2xl font-bold group-hover:text-primary transition-colors">
 													{step.title}
 												</h3>
-												<p className="text-muted-foreground leading-relaxed">
+												<p className="text-muted-foreground leading-relaxed font-bold">
 													{step.description}
 												</p>
 											</div>

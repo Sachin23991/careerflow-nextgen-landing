@@ -9,7 +9,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-muted/30 border-t border-border">
+    <footer className="bg-transparent border-t border-border">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-8">
           {/* Brand */}
@@ -25,7 +25,7 @@ const Footer = () => {
                 CareerFlow
               </span>
             </div>
-            <p className="text-muted-foreground max-w-xs">
+            <p className="text-muted-foreground max-w-xs font-medium">
               Empowering careers through AI-driven guidance, mentorship, and opportunity discovery.
             </p>
             <div className="flex space-x-3">
@@ -53,7 +53,7 @@ const Footer = () => {
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-muted-foreground hover:text-foreground transition-colors font-bold"
                     >
                       {link}
                     </a>
@@ -66,8 +66,8 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>&copy; 2025 CareerFlow. All rights reserved.</p>
-          <p>Made By Sachin Rao </p>
+          <p className="font-bold">&copy; 2025 CareerFlow. All rights reserved.</p>
+          <p className="font-bold">Made By Sachin Rao </p>
         </div>
       </div>
     </footer>

@@ -13,7 +13,7 @@ const Hero = () => {
   const handleStartJourney = () => navigate("/login");
 
   return (
-    <section className={`relative flex items-start justify-center overflow-hidden bg-gradient-hero pt-6`}>
+    <section className={`relative flex items-start justify-center overflow-hidden bg-transparent pt-6 font-bold`}>
       {/* 3D Scene Background */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -49,12 +49,12 @@ const Hero = () => {
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               Unlock Your
-              <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent font-bold">
                 Career Potential
               </span>
             </h1>
 
-            <p className="text-xl text-muted-foreground max-w-xl">
+            <p className="text-xl text-muted-foreground max-w-xl font-bold">
               Your all-in-one platform for career guidance, mentorship, job discovery, and skill development. 
               Connect with mentors, build your resume, and chart your path to success with AI-powered insights.
             </p>
@@ -94,7 +94,7 @@ const Hero = () => {
                   whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 >
                   <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground font-bold">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
